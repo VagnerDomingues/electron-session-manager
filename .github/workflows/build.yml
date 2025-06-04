@@ -1,0 +1,176 @@
+name: Build Electron PWA Boilerplate
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-examples:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            platform: win
+            artifact-name: windows-examples
+            build-script: build:all:examples:win
+          - os: macos-latest  
+            platform: mac
+            artifact-name: macos-examples
+            build-script: build:all:examples:mac
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build all PWA examples
+      run: npm run ${{ matrix.build-script }}
+      env:
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+        SKIP_CODE_SIGNING: true
+        
+    - name: Create release structure
+      shell: bash
+      run: |
+        # Create a release-ready structure
+        mkdir -p release/${{ matrix.platform }}
+        
+        # Copy all built examples to release directory
+        for app in asana chatgpt discord notion spotify whatsappweb youtube-music; do
+          if [ -d "dist/$app" ]; then
+            echo "Packaging $app..."
+            cp -r "dist/$app" "release/${{ matrix.platform }}/"
+            
+            # Create a README for each app
+            cat > "release/${{ matrix.platform }}/$app/README.md" << EOF
+        # $app Desktop App
+        
+        This is a desktop version of $app built with Electron PWA Boilerplate.
+        
+        ## Installation
+        
+        ### Windows
+        - Extract the files to a folder
+        - Run the .exe file
+        
+        ### macOS  
+        - Extract the .app bundle
+        - Move to Applications folder (optional)
+        - Run the app
+        
+        ## About
+        
+        Built with [Electron PWA Boilerplate](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME)
+        
+        This application is not affiliated with the original $app service.
+        All trademarks belong to their respective owners.
+        EOF
+          fi
+        done
+        
+    - name: Create platform archive
+      shell: bash
+      run: |
+        cd release
+        if [ "${{ matrix.platform }}" = "win" ]; then
+          7z a "../${{ matrix.artifact-name }}.zip" "${{ matrix.platform }}/"
+        else
+          tar -czf "../${{ matrix.artifact-name }}.tar.gz" "${{ matrix.platform }}/"
+        fi
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: release/${{ matrix.platform }}/
+        retention-days: 90
+        
+    - name: Upload release archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}-archive
+        path: |
+          ${{ matrix.artifact-name }}.zip
+          ${{ matrix.artifact-name }}.tar.gz
+        retention-days: 90
+
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-examples
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/windows-examples-archive/*.zip
+          artifacts/macos-examples-archive/*.tar.gz
+        name: PWA Examples Release ${{ github.ref_name }}
+        body: |
+          # 🚀 Electron PWA Boilerplate - All Examples
+          
+          This release contains pre-built desktop applications for popular web services:
+          
+          ## 📦 Included Applications
+          
+          - **Asana** - Project management and team collaboration
+          - **ChatGPT** - AI assistant interface  
+          - **Discord** - Voice, video and text chat
+          - **Notion** - All-in-one workspace
+          - **Spotify** - Music streaming service
+          - **WhatsApp Web** - Web version of WhatsApp
+          - **YouTube Music** - Music streaming from YouTube
+          
+          ## 💾 Downloads
+          
+          - **Windows**: Download the `.zip` file
+          - **macOS**: Download the `.tar.gz` file
+          
+          ## 🔧 Installation
+          
+          1. Download the appropriate file for your platform
+          2. Extract the archive
+          3. Navigate to the app folder you want to use
+          4. Run the executable file
+          
+          ## ⚠️ Security Note
+          
+          These applications are unsigned. You may need to:
+          - **Windows**: Allow the app in Windows Defender SmartScreen
+          - **macOS**: Allow the app in System Preferences > Security & Privacy
+          
+          ## 📝 Customization
+          
+          To build your own PWA or customize these apps, visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
+          
+          ---
+          
+          Built with ❤️ using Electron PWA Boilerplate
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

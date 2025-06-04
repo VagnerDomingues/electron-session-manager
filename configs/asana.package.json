@@ -1,0 +1,85 @@
+{
+  "name": "asana-desktop",
+  "version": "1.0.0",
+  "description": "Asana - Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node scripts/build.js",
+    "build:win": "node scripts/build.js win",
+    "build:mac": "node scripts/build.js mac",
+    "build:linux": "node scripts/build.js linux",
+    "build:win:nsis": "node scripts/build.js win nsis",
+    "build:win:portable": "node scripts/build.js win portable",
+    "build:mac:dmg": "node scripts/build.js mac dmg",
+    "build:all": "npm run build:win & npm run build:mac & npm run build:linux",
+    "build:examples:all": "node scripts/build-all-examples.js",
+    "build:examples:win": "node scripts/build-all-examples.js win",
+    "build:examples:mac": "node scripts/build-all-examples.js mac",
+    "build:examples:linux": "node scripts/build-all-examples.js linux",
+    "dist": "electron-builder --publish=never",
+    "postinstall": "electron-builder install-app-deps",
+    "config": "node config.js",
+    "check-config": "node scripts/check-config.js"
+  },
+  "keywords": [
+    "electron",
+    "pwa",
+    "desktop",
+    "asana",
+    "productivity",
+    "cross-platform"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  },  "build": {
+    "appId": "com.companyname.asana",
+    "productName": "Asana",
+    "icon": "assets/Appicons/Asana.ico",
+    "directories": {
+      "output": "dist/asana",
+       "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**/*",
+      "node_modules/**/*",
+      ".env"
+    ],
+    "forceCodeSigning": false,    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/Appicons/Asana.png",
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null
+    },
+    "win": {
+      "icon": "assets/Appicons/Asana.ico",
+      "target": "dir",
+      "verifyUpdateCodeSignature": false,
+      "requestedExecutionLevel": "asInvoker",
+      "signAndEditExecutable": false,
+      "signDlls": false,
+      "publisherName": "PWA Desktop",
+      "executableName": "Asana"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
