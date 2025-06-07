@@ -1,4 +1,4 @@
-name: Build Electron PWA Boilerplate
+name: Build Electron Session Manager
 
 on:
   push:
@@ -19,11 +19,11 @@ jobs:
           - os: windows-latest
             platform: win
             artifact-name: windows-examples
-            build-script: build:all:examples:win
+            build-script: build:examples:win
           - os: macos-latest  
             platform: mac
             artifact-name: macos-examples
-            build-script: build:all:examples:mac
+            build-script: build:examples:mac
         
     steps:
     - name: Checkout code
@@ -49,9 +49,8 @@ jobs:
       run: |
         # Create a release-ready structure
         mkdir -p release/${{ matrix.platform }}
-        
-        # Copy all built examples to release directory
-        for app in asana chatgpt discord notion spotify whatsappweb youtube-music; do
+          # Copy all built examples to release directory
+        for app in asana chatgpt discord notion whatsappweb; do
           if [ -d "dist/$app" ]; then
             echo "Packaging $app..."
             cp -r "dist/$app" "release/${{ matrix.platform }}/"
@@ -75,7 +74,7 @@ jobs:
         
         ## About
         
-        Built with [Electron PWA Boilerplate](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME)
+        Built with [Electron Session Manager](https://github.com/VagnerDomingues/electron-session-manager)
         
         This application is not affiliated with the original $app service.
         All trademarks belong to their respective owners.
@@ -130,8 +129,7 @@ jobs:
           artifacts/windows-examples-archive/*.zip
           artifacts/macos-examples-archive/*.tar.gz
         name: PWA Examples Release ${{ github.ref_name }}
-        body: |
-          # 🚀 Electron PWA Boilerplate - All Examples
+        body: |          # 🚀 Electron Session Manager - All Examples
           
           This release contains pre-built desktop applications for popular web services:
           
@@ -141,9 +139,7 @@ jobs:
           - **ChatGPT** - AI assistant interface  
           - **Discord** - Voice, video and text chat
           - **Notion** - All-in-one workspace
-          - **Spotify** - Music streaming service
           - **WhatsApp Web** - Web version of WhatsApp
-          - **YouTube Music** - Music streaming from YouTube
           
           ## 💾 Downloads
           
@@ -166,10 +162,9 @@ jobs:
           ## 📝 Customization
           
           To build your own PWA or customize these apps, visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
+            ---
           
-          ---
-          
-          Built with ❤️ using Electron PWA Boilerplate
+          Built with ❤️ using Electron Session Manager
         draft: false
         prerelease: false
       env:

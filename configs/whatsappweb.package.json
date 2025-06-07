@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp-desktop",
+  "name": "whatsapp-sessions",
   "version": "1.0.0",
-  "description": "WhatsApp Second Instance - Desktop Application",
+  "description": "WhatsApp Sessions - Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -21,16 +21,16 @@
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },
-  "keywords": [
+  },  "keywords": [
     "electron",
-    "pwa",
-    "desktop",
+    "session-management",
+    "multi-account",
     "whatsapp",
-    "messaging",
-    "cross-platform"
+    "desktop",
+    "cross-platform",
+    "pwa-client"
   ],
-  "author": "Your Name",
+  "author": "Vagner Domingues Madeira",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.3.3",
@@ -39,8 +39,8 @@
   "dependencies": {
     "dotenv": "^16.5.0"
   },  "build": {
-    "appId": "com.yourname.whatsapp-second-instance",
-    "productName": "WhatsApp Second Instance",
+    "appId": "com.yourname.whatsapp-sessions",
+    "productName": "WhatsApp Sessions",
     "icon": "assets/Appicons/Whatsapp.ico",
     "directories": {
       "output": "dist/whatsappweb"
@@ -48,6 +48,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "sessionManager.js",
       "assets/**/*",
       "node_modules/**/*",
       ".env"
@@ -74,7 +75,7 @@
       "signAndEditExecutable": false,
       "signDlls": false,
       "publisherName": "PWA Desktop",
-      "executableName": "WhatsApp"
+      "executableName": "WhatsApp Sessions"
     },
     "nsis": {
       "oneClick": false,

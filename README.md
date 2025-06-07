@@ -1,28 +1,26 @@
-# Electron PWA Boilerplate
+# Electron Session Manager
 
-A versatile Electron boilerplate for converting any Progressive Web App (PWA) or website into a native desktop application. Features comprehensive environment-based configuration and comes with pre-configured examples for popular web applications.
+A powerful Electron desktop client specifically designed for web applications that benefit from session isolation. Perfect for managing multiple accounts of the same service (WhatsApp Personal + Business, etc.) with complete context separation. Each session maintains its own cookies, storage, and authentication state.
 
-<!-- ![Build Status](https://github.com/<username>/<repo>/workflows/Build%20Electron%20App/badge.svg) -->
+<!-- ![Build Status](https://github.com/VagnerDomingues/electron-session-manager/workflows/Build%20Electron%20App/badge.svg) -->
 
-## 🚀 Why This Project Exists
+## 🚀 Why Electron Session Manager Exists
 
 This project was born from two main motivations:
 
 ### 🎯 Learning Electron & Blockchain Integration
-I've always wanted to dive deep into Electron and explore its capabilities, particularly for integrating **blockchain wallets into native applications**. This boilerplate serves as my foundation for understanding Electron's architecture and as a stepping stone toward more advanced projects involving Web3 and cryptocurrency wallet integrations.
+I've always wanted to dive deep into Electron and explore its capabilities, particularly for integrating **blockchain wallets into native applications**. Electron Session Manager also serves as a boilerplate foundation for understanding Electron's architecture and as a stepping stone toward more advanced projects involving Web3 and cryptocurrency wallet integrations.
 
-### 💻 Solving macOS PWA Limitations
+### 💻 Solving a macOS PWA Limitations
 The immediate trigger for this project came from my transition to **macOS**, which is happening slowly. I was frustrated with how browser-installed PWAs behave differently from native applications:
 
 - **The Problem**: When you install PWAs through the browser (using "Add to Dock" or similar features), they completely **close** when you click the 'X' button
 - **Native App Behavior**: Real macOS applications minimize to the background and stay in the dock when you close their window
-- **My Specific Need**: I rely heavily on **Asana** and **WhatsApp Web**, and I don't like to use the distributed **WhatsApp** native desktop app for a few reasons. So throughout my workday, constantly having to reopen them was breaking my workflow
+- **My Specific Need**: I rely heavily on **Asana** and **WhatsApp Web**, and I don't like to use the distributed **WhatsApp** native desktop app for a few reasons. So throughout my workday, constantly having to reopen them because i was trying to minimize it was breaking my workflow
 
-This Electron wrapper gives web applications the same **minimize-to-background behavior** as native macOS apps, solving my productivity issue while providing a solid foundation for future Electron development.
+Electron Session Manager gives web applications the same **minimize-to-background behavior** as native macOS apps, solving my productivity issue while providing a solid foundation for future Electron development.
 
-- **An unwanted Bonus Feature**: The context isolation that Electron provides also enables you to have **multiple instances of WhatsApp** running simultaneously in different contexts. This means you can have one dedicated application for WhatsApp Business while keeping your personal WhatsApp Web in another instance within the same app.
-
- whatsapp instances if you manage support for multiple companies - which is a really cool feature that was unintended and makes it useful for managing multiple accounts!
+- **A hiden Bonus Feature**: The context isolation that Electron provides also enables you to have **multiple instances of WhatsApp** running simultaneously in different contexts. This means you can have one dedicated application for WhatsApp Business while keeping your personal WhatsApp Web in another instance all this within the same app. If you manage support for multiple companies that is for you - this is a really cool feature that was unintended at first but when i saw this was possible to achieve i decided to give create a full session manager menu inside an Electron boilerplate which you can switch between sessions save the state of them and choose one to be the default to launch first when you open the app.
 
 
 ## Features
@@ -31,19 +29,31 @@ This Electron wrapper gives web applications the same **minimize-to-background b
 - 🔒 Browsing with context isolation
 - 🔔 Native notifications support
 - 🌍 Cross-platform: Windows, macOS, and Linux
-- ✨ Custom user agent support for compatibility with known apps such as **Whatsapp web**
+- ✨ Custom user agent support for compatibility
 - 🚀 GitHub Actions CI/CD for automated builds
 - 📦 Multiple build targets (installers, portable, etc.)
+- 🌓 System Theme Detection that automatically adapts to your OS dark/light theme preference
 - 🍎 **True native macOS behavior** - apps minimize instead of closing
 - 📱 **Multiple app instances** - Run separate instances of the same web app with different contexts/accounts connected
+- 🧠 **Advanced Session Management** - Create, rename, and manage multiple isolated sessions with persistent data
+- 🛡️ **Title Protection** - Maintains clean window titles that are used in OSs notification's header
+- 🛠️ **Development Testing Tool** - Use session management with localhost for multiplayer game testing and multi-user scenarios
+- ⌨️ **Hotkey Controls** - F1 to toggle session menu, other shortcuts for quick actions
 
-## 📋 Available Example Configurations
+## 📋 Available Configurations
 
-This boilerplate comes with 5 pre-configured examples ready to use:
+### build script
+Creates the default development app
 
 | App | Configuration File | URL | Features |
 |-----|-------------------|-----|----------|
-| 🔧 **Generic PWA** | `.env.example` | `https://example.com` | Template for any web app |
+| 🛠️ **Default** | Custom `.env` | `localhost:5173` | Development multi-session testing tool |
+
+### build:examples script
+Creates 5 pre-configured examples ready to use:
+
+| App | Configuration File | URL | Features |
+|-----|-------------------|-----|----------|
 | 💬 **WhatsApp Web** | `configs/whatsappweb.env` | `https://web.whatsapp.com` | Chrome user agent, multiple instances |
 | 🎮 **Discord** | `configs/discord.env` | `https://discord.com/app` | Gaming communication platform |
 | 📝 **Notion** | `configs/notion.env` | `https://www.notion.so` | Workspace and notes |
@@ -73,34 +83,32 @@ You can easily adapt this for:
 
 1. **Clone this repository:**
    ```bash
-   git clone <your-repo-url>
-   cd electron-pwa-boilerplate
+   git clone https://github.com/VagnerDomingues/electron-session-manager
+   cd electron-session-manager
    ```
 
 2. **Install dependencies:**
    ```bash
    npm install
    ```
-3. **Choose your configuration:**
+3. **Choose your base configuration:**
    
    **Option A: Use a pre-configured example app**
-   ```powershell
-   # Copy one of the example configurations:
-   copy configs\whatsappweb.env .env    # For WhatsApp Web
-   copy configs\discord.env .env        # For Discord
-   copy configs\notion.env .env         # For Notion
-   copy configs\asana.env .env          # For Asana
-   copy configs\chatgpt.env .env        # For ChatGPT
+   ```bash
+   # Move package.json and .env.example from configs/ to /root and edit as needed:
+
+   # For WhatsApp Web
+   copy configs\whatsappweb.env .env   
+   copy configs\whatsappweb.package.json .package.json    
    ```
 
    **Option B: Create your own web app**
-   ```powershell
+   ```bash
    # Copy the generic template and customize it:
    copy .env.example .env
    ```
+   
    Then edit `.env` to set your `APP_NAME`, `APP_URL`, and other settings.
-
-
 
 
 4. **Run the app:**
@@ -151,11 +159,94 @@ This project uses environment variables for comprehensive configuration. Choose 
 - `APP_URL`: Target website URL (e.g., https://example.com, https://web.whatsapp.com)
 - `USER_AGENT`: Custom user agent string for compatibility
 
+### Session Management Configuration
+- `ENABLE_MULTIPLE_SESSION_IDS`: Enable advanced session management (true/false)
+
 ### Window Settings
 - `WINDOW_WIDTH`: Default window width
 - `WINDOW_HEIGHT`: Default window height
 - `WINDOW_MIN_WIDTH`: Minimum window width
 - `WINDOW_MIN_HEIGHT`: Minimum window height
+
+## 🧠 Advanced Session Management
+
+When `ENABLE_MULTIPLE_SESSION_IDS=true` is set in your `.env` file, the app unlocks powerful session management capabilities that allow you to manage multiple isolated sessions with persistent data.
+
+### Key Features
+
+**🔒 Complete Context Isolation**: Each session maintains its own:
+- Cookies and authentication
+- localStorage and sessionStorage
+- Cache and browsing data
+- User preferences and settings
+
+**🎯 Perfect for Multiple Accounts**: 
+- WhatsApp: Multiple Personal or Business accounts
+- Asana: Multiple Personal or Team accounts
+- Discord: Multiple alt accounts
+- Notion: Different workspaces
+- ChatGPT: Separated conversation contexts
+
+### How to Use
+
+1. **Enable the feature** in your `.env` file:
+   ```env
+   ENABLE_MULTIPLE_SESSION_IDS=true
+   ```
+
+2. **Use the 'Session' menu to open** to:
+   - **Rename Current**: Change the name of your current session
+   - **Set as Default**: Make this session open automatically when launching the app
+   - **Start New Session**: Create a new isolated session with incremental ID
+   - **Delete Current**: Remove the current session (except default session-1)
+   - **Delete All Sessions**: Remove all sessions except the default
+   - **Open Saved Session**: Switch to an existing session from the list
+
+### 🛠️ Development & Testing Use Cases
+
+**Perfect for Local Development Testing:**
+
+When developing web applications, especially multiplayer games or multi-user systems, this session manager becomes an invaluable testing tool:
+
+#### Multiuser Development
+- **Set APP_URL to `localhost:5173`** (or your development server URL)
+- **Create multiple sessions** login with different users accounts
+- **Each session maintains separate**:
+  - User authentication tokens
+  - Local storage data
+  - Login state
+  - Browser's 'stay connected'
+
+#### Multi-User Application Testing
+- **Easily kill a session** - clear everything, from cache to local storage.
+- **Simulate concurrent users** - without the need of multiple tabs, different browsers or icognito mode
+- **Maintain isolated user contexts** - keep accounts connected for further tests
+- **Perfect for Dapp development** - Remember to install your wallet extension in this solution and rebuild after
+
+#### Example Development Workflow
+```env
+# Your .env file for development
+APP_NAME=My Game Dev
+APP_URL=http://localhost:5173
+ENABLE_MULTIPLE_SESSION_IDS=true
+```
+
+1. Start your development server on your separated solution
+2. Launch this Electron wrapper pointing to your localhost:port
+3. Create sessions for Player 1, Player 2, Admin, etc.
+4. Test multiplayer interactions, user roles, and state management
+5. Each session maintains its own authentication and state
+
+### Data Persistence
+
+Each session's data is stored in isolated directories:
+```
+userData/sessions/
+├── session-1/          # Default session (cannot be deleted)
+├── session-2/          # Second session 
+├── session-3/          # Third session
+└── sessions.json       # Session configuration file
+```
 
 ## Usage
 
@@ -170,6 +261,7 @@ npm start
 ### Building
 
 ### Single App Build
+**uses the default root .env and package.json config:**
 
 Build your currently configured app for the current platform:
 ```bash
@@ -196,8 +288,10 @@ npm run build:all
 ```
 
 ### Build All Examples at Once
+**run through all preconfigured .env and package.json from config folder**
 
-This boilerplate includes a powerful feature to automatically build **all** example PWAs in one command:
+Electron Session Manager includes a script to automatically build **all** example PWAs in one command:
+
 
 #### Build All Examples for Windows
 ```bash
@@ -249,7 +343,7 @@ The built applications will be available in the `dist` folder, organized by app 
 
 ### GitHub Actions Integration
 
-This boilerplate includes GitHub Actions workflows that will:
+Electron Session Manager includes GitHub Actions workflows that will:
 
 1. **On every push**: Build and test all examples
 2. **On tag creation** (e.g., `v1.0.0`): 
@@ -286,22 +380,30 @@ This will trigger GitHub Actions to:
 
 ### Icons
 
-The boilerplate includes icons for popular applications in the `assets/Appicons/` folder:
+Electron Session Manager includes icons for popular applications in the `assets/Appicons/` folder:
 - `Discord.ico/.png` - Discord desktop app
 - `WhatsApp.ico/.png` - WhatsApp Web  
 - `Notion.ico/.png` - Notion workspace
 - `ChatGPT.ico/.png` - ChatGPT interface
 - `Asana.ico/.png` - Asana project management
 
-To add your own icons, place them in `assets/Appicons/` and update your `.env` file:
+To add your own icons you can place them in two places:
+`assets/Appicons/` or the electron's default `assets/`
+just remember to point them correctly in your .env:
+
 ```env
-WIN_ICON=assets/Appicons/YourApp.ico
-MAC_ICON=assets/Appicons/YourApp.png
+WIN_ICON=assets/Appicons/YourAppName.ico
+MAC_ICON=assets/Appicons/YourAppName.png
+
+or
+
+WIN_ICON=assets/icon.ico
+MAC_ICON=assets/icon.png
 ```
 
 ### App Information
 
-The boilerplate uses environment variables for configuration, so you typically don't need to edit everything in `package.json` directly. Instead:
+Electron Session Manager uses environment variables for configuration, so you typically don't need to edit everything in `package.json` directly. Instead:
 
 1. **For runtime configuration** - Use your `.env` file:
    ```env
@@ -315,7 +417,7 @@ The boilerplate uses environment variables for configuration, so you typically d
 3. **For permanent changes** - Edit `package.json` if needed:
    - `name` - App package name
    - `productName` - Display name
-   - `author` - Your name
+   - `author` - Vagner Domingues
    - `description` - App description
 - `appId` - Unique app identifier in build config
 
@@ -349,50 +451,11 @@ The app uses `electron-builder` for packaging. Configuration is in the `build` s
 - Consider code signing for production distribution.
 
 #### macOS
-- The app needs to be signed for distribution outside the Mac App Store.
+- The app needs to be signed for distribution inside the Mac App Store.
 - Users might need to allow the app in System Preferences > Security & Privacy.
 
-## 🔄 Switching Between App Configurations
 
-This boilerplate makes it easy to switch between the 5 pre-configured web applications. **Note**: This will overwrite your current `.env` file.
-
-### Switch to WhatsApp Web
-```powershell
-copy configs\whatsappweb.env .env
-npm start
-```
-
-### Switch to Discord Web App  
-```powershell
-copy configs\discord.env .env
-npm start
-```
-
-### Switch to Notion
-```powershell
-copy configs\notion.env .env
-npm start
-```
-
-### Switch to Asana
-```powershell
-copy configs\asana.env .env
-npm start
-```
-
-### Switch to ChatGPT
-```powershell
-copy configs\chatgpt.env .env
-npm start
-```
-
-After copying any configuration, you can:
-1. **Test the configuration**: `node scripts/check-config.js`
-2. **Run the app**: `npm start`
-3. **Edit and Build for distribution\***: `npm run build:win` or `npm run build:mac`
-
-\*The example apps that are included are not ready for distribution since they aren't signed applications.
-
+**\*Note:** The example apps that are included are not ready for distribution they are just to explore usecase scenarios.
 Each configuration includes the proper app name, icon, URL, and optimized window settings for that specific application.
 
 ## License
@@ -401,8 +464,8 @@ MIT License - feel free to use this for personal or commercial projects.
 
 ## Contributing
 
-Feel free to submit issues, feature requests, or pull requests to improve this boilerplate.
+Feel free to submit issues, feature requests, or pull requests to improve Electron Session Manager.
 
 ## Disclaimer
 
-This is a generic Electron PWA boilerplate for converting web applications to desktop apps. All application names, trademarks, and logos belong to their respective owners. This project is not affiliated with any of the web applications used in the examples.
+Electron Session Manager is an Electron multi-session PWA client for converting web applications to desktop apps. All application names, trademarks, and logos belong to their respective owners. This project is not affiliated with any of the web applications used in the examples.

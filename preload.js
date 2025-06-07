@@ -9,10 +9,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Example: Add notification support
   showNotification: (title, body) => {
     new Notification(title, { body });
+  },
+  
+  // Connection error page APIs
+  getAppUrl: () => ipcRenderer.invoke('get-app-url'),
+  retryConnection: () => ipcRenderer.invoke('retry-connection'),
+  openDevTools: () => ipcRenderer.invoke('open-dev-tools'),
+  
+  // Session Management APIs
+  sessionManagement: {
+    isEnabled: () => ipcRenderer.invoke('session-is-enabled'),
+    getCurrentSession: () => ipcRenderer.invoke('session-get-current'),
+    getAllSessions: () => ipcRenderer.invoke('session-get-all'),
+    createSession: (name) => ipcRenderer.invoke('session-create', name),
+    renameSession: (sessionId, name) => ipcRenderer.invoke('session-rename', sessionId, name),
+    deleteSession: (sessionId) => ipcRenderer.invoke('session-delete', sessionId),
+    switchToSession: (sessionId) => ipcRenderer.invoke('session-switch', sessionId),
+    setAsDefault: (sessionId) => ipcRenderer.invoke('session-set-default', sessionId),
+    toggleMenu: () => ipcRenderer.invoke('session-toggle-menu')
   }
 });
 
-// Enhance WhatsApp Web experience
+// Enhance Web experience
 window.addEventListener('DOMContentLoaded', () => {
   // Add custom CSS for better desktop experience
   const style = document.createElement('style');
@@ -51,3 +69,34 @@ window.addEventListener('DOMContentLoaded', () => {
     Notification.requestPermission();
   }
 });
+
+// Session Management - Keyboard Shortcuts Only
+window.addEventListener('DOMContentLoaded', () => {
+  // Only add keyboard shortcuts if session management is enabled
+  if (window.electronAPI && window.electronAPI.sessionManagement) {
+    window.electronAPI.sessionManagement.isEnabled().then(enabled => {
+      if (enabled) {
+        setupKeyboardShortcuts();
+      }
+    });
+  }
+});
+
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', (event) => {
+    // F1 to toggle session menu
+    if (event.key === 'F1') {
+      event.preventDefault();
+      window.electronAPI.sessionManagement.toggleMenu();
+    }
+    
+    // Ctrl+Shift+N for new session (optional)
+    if (event.ctrlKey && event.shiftKey && event.key === 'N') {
+      event.preventDefault();
+      const name = prompt('Enter new session name:');
+      if (name && name.trim()) {
+        window.electronAPI.sessionManagement.createSession(name.trim());
+      }
+    }
+  });
+}

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <title id="page-title">Connection Error - Electron Session Manager</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --accent-color: #007acc;
+            --border-color: #e1e1e1;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffeaa7;
+            --warning-text: #856404;
+            --code-bg: #f8f9fa;
+            --code-border: #e9ecef;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-color: #ffffff;
+                --accent-color: #00d4aa;
+                --border-color: #404040;
+                --warning-bg: #3a2f1b;
+                --warning-border: #8a6914;
+                --warning-text: #ffc107;
+                --code-bg: #2d2d2d;
+                --code-border: #404040;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .warning-box {
+            background-color: var(--warning-bg);
+            border: 2px solid var(--warning-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .warning-title {
+            color: var(--warning-text);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .warning-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .target-url {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin: 1rem 0;
+            font-size: 1rem;
+            color: var(--accent-color);
+            word-break: break-all;
+        }
+
+        .steps {
+            text-align: left;
+            margin: 2rem 0;
+        }
+
+        .steps h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .steps ol {
+            margin-left: 1.5rem;
+        }
+
+        .steps li {
+            margin-bottom: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 4px;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            text-align: left;
+            overflow-x: auto;
+        }
+
+        .refresh-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 1rem 0.5rem;
+            transition: opacity 0.2s;
+        }
+
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+
+        .info-section {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .info-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .feature-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✨";
+            position: absolute;
+            left: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>    <div class="container">
+        <div class="logo pulse">🔌</div>
+        <h1 id="main-title">Connection Error</h1>
+        <p class="subtitle" id="main-subtitle">Unable to connect to the configured service</p>
+          <div class="warning-box">
+            <div class="warning-title">
+                <span class="warning-icon">⚠️</span>
+                <span id="error-title">Connection Failed</span>
+            </div>
+            <p id="error-description">Unable to connect to the configured URL:</p>
+            <div class="target-url" id="app-url">Loading...</div>
+        </div>
+
+        <div class="steps" id="steps-container">
+            <!-- Content will be populated by JavaScript based on URL type -->
+        </div>
+
+        <div class="code" id="code-example" style="display: none;">
+            <!-- Code example will be shown only for localhost URLs -->
+        </div>
+
+        <button class="refresh-btn" onclick="refreshPage()">🔄 Retry Connection</button>
+        <button class="refresh-btn" onclick="openDevTools()">🔍 Open DevTools</button>
+
+        <div class="info-section">
+            <h3>🧠 About Electron Session Manager</h3>
+            <p>A powerful desktop client with advanced session management for web applications. Perfect for:</p>
+            <ul class="feature-list">
+                <li><strong>Multi-account management</strong> - Run multiple instances of the same service</li>
+                <li><strong>Session isolation</strong> - Complete context separation between sessions</li>
+                <li><strong>Development testing</strong> - Perfect for localhost development and multi-user testing</li>
+                <li><strong>Web app wrapping</strong> - Convert any website into a native desktop app</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Learn more at <a href="https://github.com/VagnerDomingues/electron-session-manager" target="_blank">GitHub Repository</a></p>
+        </div>
+    </div>
+
+    <script>        // Update the URL display and customize content based on URL type
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlElement = document.getElementById('app-url');
+            const errorTitle = document.getElementById('error-title');
+            const errorDescription = document.getElementById('error-description');
+            const stepsContainer = document.getElementById('steps-container');
+            const codeExample = document.getElementById('code-example');            const mainTitle = document.getElementById('main-title');
+            const mainSubtitle = document.getElementById('main-subtitle');
+            const pageTitle = document.getElementById('page-title');
+            
+            function updateContent(url) {
+                urlElement.textContent = url;
+                
+                // Determine if this is a localhost URL
+                const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1') || url.includes('0.0.0.0');
+                
+                if (isLocalhost) {
+                    // Development server scenario
+                    mainTitle.textContent = 'Development Server Disconnected';
+                    mainSubtitle.textContent = 'Electron Session Manager is running in development mode';
+                    pageTitle.textContent = 'Development Server Disconnected - Electron Session Manager';
+                    errorTitle.textContent = 'Development Server Disconnected';
+                    errorDescription.textContent = 'Your development server is not running on:';
+                    
+                    stepsContainer.innerHTML = `
+                        <h3>🚀 Development Setup</h3>
+                        <ol>
+                            <li><strong>Start your development server</strong> on the configured port</li>
+                            <li><strong>Check your project setup</strong> - ensure the server is running</li>
+                            <li><strong>Verify the port</strong> matches your development configuration</li>
+                            <li><strong>Update .env file</strong> if you need to change the URL</li>
+                        </ol>
+                    `;
+                    
+                    // Show code example for localhost
+                    const port = url.match(/:(\d+)/)?.[1] || '3000';
+                    codeExample.style.display = 'block';
+                    codeExample.innerHTML = `# Example: Start a development server on port ${port}
+npm run dev
+# or
+yarn dev  
+# or
+python -m http.server ${port}
+# or
+npx serve -p ${port}`;
+                } else {
+                    // External service scenario
+                    let serviceName = 'the service';
+                    let websiteName = url;
+                    
+                    // Extract service name and clean URL for better messaging
+                    if (url.includes('whatsapp.com')) {
+                        serviceName = 'WhatsApp Web';
+                        websiteName = 'whatsapp.com';
+                    } else if (url.includes('discord.com')) {
+                        serviceName = 'Discord';
+                        websiteName = 'discord.com';
+                    } else if (url.includes('notion.so') || url.includes('notion.com')) {
+                        serviceName = 'Notion';
+                        websiteName = 'notion.so';
+                    } else if (url.includes('openai.com') || url.includes('chatgpt.com')) {
+                        serviceName = 'ChatGPT';
+                        websiteName = 'chatgpt.com';
+                    } else if (url.includes('asana.com')) {
+                        serviceName = 'Asana';
+                        websiteName = 'asana.com';
+                    } else {
+                        // Extract domain from URL for generic services
+                        try {
+                            const urlObj = new URL(url);
+                            websiteName = urlObj.hostname;
+                            serviceName = websiteName.replace('www.', '').split('.')[0];
+                            serviceName = serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
+                        } catch (e) {
+                            websiteName = url;
+                            serviceName = 'the service';
+                        }
+                    }
+                      mainTitle.textContent = `We couldn't reach ${serviceName}`;
+                    mainSubtitle.textContent = `You could be offline or there might be a downtime`;
+                    pageTitle.textContent = `${serviceName} Unavailable - Electron Session Manager`;
+                    errorTitle.textContent = 'Service Unavailable';
+                    errorDescription.textContent = `Unable to connect to ${serviceName}:`;
+                    
+                    stepsContainer.innerHTML = `
+                        <h3>🌐 Connection Issues</h3>
+                        <ol>
+                            <li><strong>Check your internet connection</strong> - ensure you're online</li>
+                            <li><strong>Verify ${serviceName} status</strong> - ${websiteName} might be temporarily down</li>
+                            <li><strong>Try refreshing</strong> the connection using the retry button below</li>
+                            <li><strong>Check firewall/proxy settings</strong> if the issue persists</li>
+                        </ol>
+                    `;
+                    
+                    // Hide code example for external services
+                    codeExample.style.display = 'none';
+                }
+            }
+            
+            if (window.electronAPI && window.electronAPI.getAppUrl) {
+                window.electronAPI.getAppUrl().then(url => {
+                    updateContent(url);
+                }).catch(error => {
+                    console.error('Failed to get app URL:', error);
+                    updateContent('Configuration not available');
+                });
+            } else {                console.warn('electronAPI not available, using fallback');
+                mainTitle.textContent = 'Connection Error';
+                mainSubtitle.textContent = 'Unable to load application configuration';
+                pageTitle.textContent = 'Configuration Error - Electron Session Manager';
+                errorTitle.textContent = 'Configuration Error';
+                errorDescription.textContent = 'Unable to load application:';
+                urlElement.textContent = 'Configuration not available';
+                
+                stepsContainer.innerHTML = `
+                    <h3>⚠️ Configuration Issue</h3>
+                    <p>There seems to be a problem with the application configuration. Please restart the application.</p>
+                `;
+            }
+        });        function refreshPage() {
+            if (window.electronAPI && window.electronAPI.retryConnection) {
+                window.electronAPI.retryConnection();
+            } else {
+                location.reload();
+            }
+        }
+
+        function openDevTools() {
+            if (window.electronAPI && window.electronAPI.openDevTools) {
+                window.electronAPI.openDevTools();
+            }
+        }
+
+        // Manual retry only - no auto-retry to avoid page disappearing
+        // User can click the retry button when they want to test the connection
+    </script>
+</body>
+</html>

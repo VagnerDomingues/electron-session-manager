@@ -21,16 +21,15 @@
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },
-  "keywords": [
+  },  "keywords": [
     "electron",
-    "pwa",
+    "session-management",
+    "multi-account",
     "desktop",
-    "notion",
-    "productivity",
-    "cross-platform"
+    "cross-platform",
+    "pwa-client"
   ],
-  "author": "Your Name",
+  "author": "Vagner Domingues Madeira",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.3.3",
@@ -44,10 +43,10 @@
     "icon": "assets/Appicons/Notion.ico",
     "directories": {
       "output": "dist/notion"
-    },
-    "files": [
+    },    "files": [
       "main.js",
       "preload.js",
+      "sessionManager.js",
       "assets/**/*",
       "node_modules/**/*",
       ".env"
