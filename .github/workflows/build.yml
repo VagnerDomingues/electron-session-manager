@@ -93,10 +93,11 @@ jobs:
         # Debug: List all files in the directory
         echo "📁 Files in dist/${{ matrix.app }}:"
         ls -la
-        
-        if [ "${{ matrix.platform }}" = "win" ]; then
+          if [ "${{ matrix.platform }}" = "win" ]; then
           # Windows: Include NSIS installer, portable exe, and README (exclude win-unpacked folder)
-          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked        elif [ "${{ matrix.platform }}" = "mac" ]; then
+          echo "🪟 Windows: Creating archive with installer files..."
+          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked
+        elif [ "${{ matrix.platform }}" = "mac" ]; then
           # macOS: Include DMG files and README (avoid problematic --exclude flags)
           echo "🍎 macOS: Looking for .dmg files..."
           if ls *.dmg 1> /dev/null 2>&1; then
