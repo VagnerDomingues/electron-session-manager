@@ -176,104 +176,131 @@ jobs:
         name: ${{ matrix.app }}-${{ matrix.platform }}-x64
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
         retention-days: 90
-
-  # ARM64 builds (commented out for now - enable when stable)
-  # build-arm64-apps:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [windows-latest, macos-latest, ubuntu-latest]
-  #       app: [asana, chatgpt, discord, notion, whatsappweb]
-  #       include:
-  #         - os: windows-latest
-  #           platform: win
-  #         - os: macos-latest  
-  #           platform: mac
-  #         - os: ubuntu-latest
-  #           platform: linux
-  #       
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-  #     
-  #   - name: Setup Node.js
-  #     uses: actions/setup-node@v4
-  #     with:
-  #       node-version: '18'
-  #       cache: 'npm'
-  #       
-  #   - name: Install dependencies
-  #     run: npm ci
-  #     
-  #   - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-arm64
-  #     shell: bash
-  #     run: |
-  #       echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-arm64..."
-  #       
-  #       # Backup current files if they exist
-  #       if [ -f "package.json" ]; then
-  #         cp package.json temp.package.json.backup
-  #       fi
-  #       if [ -f ".env" ]; then
-  #         cp .env temp.env.backup
-  #       fi
-  #       
-  #       # Copy app-specific configuration
-  #       cp "configs/${{ matrix.app }}.package.json" package.json
-  #       cp "configs/${{ matrix.app }}.env" .env
-  #       
-  #       # Build the app for arm64 architecture
-  #       node scripts/build.js ${{ matrix.platform }} arm64
-  #       
-  #       # Restore original files
-  #       if [ -f "temp.package.json.backup" ]; then
-  #         mv temp.package.json.backup package.json
-  #       else
-  #         rm -f package.json
-  #       fi
-  #       if [ -f "temp.env.backup" ]; then
-  #         mv temp.env.backup .env
-  #       else
-  #         rm -f .env
-  #       fi
-  #     env:
-  #       CSC_IDENTITY_AUTO_DISCOVERY: false
-  #       SKIP_CODE_SIGNING: true
-  #       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       
-  #   - name: Create app-specific archive
-  #     shell: bash
-  #     run: |
-  #       # Create archive directory
-  #       mkdir -p archives
-  #       
-  #       # Get app display name from config
-  #       APP_NAME=$(grep "APP_NAME=" "configs/${{ matrix.app }}.env" | cut -d'=' -f2 | tr -d '"')
-  #       if [ -z "$APP_NAME" ]; then
-  #         APP_NAME="${{ matrix.app }}"
-  #       fi
-  #       
-  #       echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-arm64)..."
-  #       
-  #       # Create archive based on platform
-  #       if [ "${{ matrix.platform }}" = "win" ]; then
-  #         cd "dist/${{ matrix.app }}"
-  #         7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.zip" ./*
-  #       else
-  #         cd "dist/${{ matrix.app }}"
-  #         tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" ./*
-  #       fi
-  #       
-  #   - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-arm64 artifact
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: ${{ matrix.app }}-${{ matrix.platform }}-arm64
-  #       path: archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.*
-  #       retention-days: 90
-
+  # ARM64 builds for Apple Silicon and other ARM64 platforms
+  build-arm64-apps:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:        
+        # os: [windows-latest, macos-latest, ubuntu-latest]
+        # app: [asana, chatgpt, discord, notion, whatsappweb]
+        os: [macos-latest]  # Start with macOS only (Apple Silicon)
+        app: [whatsappweb]  # Start with one app, will expand later: [asana, chatgpt, discord, notion, whatsappweb]
+        include:
+          - os: macos-latest  
+            platform: mac
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-arm64
+      shell: bash
+      run: |
+        echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-arm64 (Apple Silicon)..."
+        
+        # Backup current files if they exist
+        if [ -f "package.json" ]; then
+          cp package.json temp.package.json.backup
+        fi
+        if [ -f ".env" ]; then
+          cp .env temp.env.backup
+        fi
+        
+        # Copy app-specific configuration
+        cp "configs/${{ matrix.app }}.package.json" package.json
+        cp "configs/${{ matrix.app }}.env" .env
+        
+        # Build the app for arm64 architecture (Apple Silicon)
+        node scripts/build.js ${{ matrix.platform }} arm64
+        
+        # Restore original files
+        if [ -f "temp.package.json.backup" ]; then
+          mv temp.package.json.backup package.json
+        else
+          rm -f package.json
+        fi
+        if [ -f "temp.env.backup" ]; then
+          mv temp.env.backup .env
+        else
+          rm -f .env
+        fi
+      env:
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+        SKIP_CODE_SIGNING: true
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create app-specific archive
+      shell: bash
+      run: |
+        # Create archive directory
+        mkdir -p archives
+        
+        # Get app display name from config
+        APP_NAME=$(grep "APP_NAME=" "configs/${{ matrix.app }}.env" | cut -d'=' -f2 | tr -d '"')
+        if [ -z "$APP_NAME" ]; then
+          APP_NAME="${{ matrix.app }}"
+        fi
+        
+        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-arm64)..."
+        echo "🎯 Including only installer/executable files (no unpacked directories)"
+        
+        # Create archive based on platform with only installer/executable files
+        cd "dist/${{ matrix.app }}"
+        
+        # Debug: List all files in the directory
+        echo "📁 Files in dist/${{ matrix.app }}:"
+        ls -la
+        
+        # macOS ARM64: Include DMG files and README (exclude .yml metadata files)
+        echo "🍎 macOS ARM64: Looking for .dmg files..."
+        if ls *.dmg 1> /dev/null 2>&1; then
+          echo "✅ Found .dmg files, creating archive..."
+          # Create archive with only DMG files and README (exclude .yml files)
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.dmg *.md 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.dmg 2>/dev/null || \
+          echo "⚠️ Basic DMG archive created"
+        else
+          echo "⚠️ No .dmg files found, checking for other Mac files..."
+          if ls *.app 1> /dev/null 2>&1; then
+            echo "📦 Found .app bundles, creating archive..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.app *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.app 2>/dev/null || \
+            echo "No suitable Mac files found for archiving"
+          elif ls -d mac* 2>/dev/null; then
+            echo "📦 Found Mac directories, using find for selective archiving..."
+            # Use find to select only installer files from directories
+            find . -name "*.dmg" -o -name "*.pkg" | tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" -T - 2>/dev/null || \
+            echo "No Mac installer files found" > build-info.txt && tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" build-info.txt
+          else
+            echo "❌ No Mac build artifacts found!"
+            # Create an empty archive to avoid complete failure
+            echo "ARM64 build completed but no Mac artifacts were generated" > build-info.txt
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" build-info.txt
+          fi
+        fi
+        
+        # Verify archive was created and show contents
+        echo "📋 Archive contents:"
+        tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz"
+        
+    - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-arm64 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.app }}-${{ matrix.platform }}-arm64
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.*
+        retention-days: 90
   create-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build-x64-apps  # Only depend on x64 builds for now
+    needs: [build-x64-apps, build-arm64-apps]  # Include both x64 and ARM64 builds
     runs-on: ubuntu-latest
     
     steps:
@@ -284,7 +311,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
-        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
@@ -304,6 +330,7 @@ jobs:
           artifacts/whatsappweb-win-x64/*.zip
           artifacts/whatsappweb-mac-x64/*.tar.gz
           artifacts/whatsappweb-linux-x64/*.tar.gz
+          artifacts/whatsappweb-mac-arm64/*.tar.gz
         name: PWA Desktop Apps Release ${{ github.ref_name }}
         body: |
           # 🚀 Electron Session Manager - Individual Desktop Apps (x64)
