@@ -46,6 +46,7 @@ jobs:
       env:
         CSC_IDENTITY_AUTO_DISCOVERY: false
         SKIP_CODE_SIGNING: true
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Create release structure
       shell: bash
