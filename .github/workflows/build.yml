@@ -81,7 +81,7 @@ jobs:
       run: |
         # Create archive directory
         mkdir -p archives
-        
+
         # Get app display name from config
         APP_NAME=$(grep "APP_NAME=" "configs/${{ matrix.app }}.env" | cut -d'=' -f2 | tr -d '"')
         if [ -z "$APP_NAME" ]; then
@@ -206,7 +206,6 @@ jobs:
           echo "📋 Archive contents:"
           tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
         fi
-        
     # Upload Windows and macOS artifacts
     - name: Upload Windows artifact
       if: matrix.platform == 'win'
@@ -229,10 +228,10 @@ jobs:
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.APP_NAME }} (debian / ubuntu / mint)
+        name: ${{ env.APP_NAME }} (debian & ubuntu & mint)
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz
         retention-days: 90
-        
+
     - name: Upload Linux General artifact
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
@@ -241,14 +240,14 @@ jobs:
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz
         retention-days: 90
         
-    # Fallback upload for Linux (combined archive)
-    - name: Upload Linux Combined artifact
-      if: matrix.platform == 'linux'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.APP_NAME }} (linux-x64)
-        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz
-        retention-days: 90
+#     # Fallback upload for Linux (combined archive)
+#     - name: Upload Linux Combined artifact
+#       if: matrix.platform == 'linux'
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: ${{ env.APP_NAME }} (linux-x64)
+#         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz
+#         retention-days: 90
 
   # Apple Silicon builds (macOS ARM64)
   build-apple-silicon-apps:
@@ -355,6 +354,7 @@ jobs:
         name: ${{ env.APP_NAME }} (apple-silicon)
         path: archives/*.dmg
         retention-days: 90
+        
   create-release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build-x64-apps, build-apple-silicon-apps]  # Include both x64 and Apple Silicon builds
