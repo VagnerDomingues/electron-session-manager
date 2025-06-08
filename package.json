@@ -1,4 +1,5 @@
-{  "name": "electron-session-manager",
+{
+  "name": "electron-session-manager",
   "version": "1.0.0",
   "description": "Electron multi-session PWA client for web applications with complete context isolation",
   "main": "main.js",
@@ -7,7 +8,7 @@
     "build": "node scripts/build.js",
     "build:win": "node scripts/build.js win x64",
     "build:win:arm64": "node scripts/build.js win arm64",
-    "build:mac": "node scripts/build.js mac x64", 
+    "build:mac": "node scripts/build.js mac x64",
     "build:mac:arm64": "node scripts/build.js mac arm64",
     "build:linux": "node scripts/build.js linux x64",
     "build:linux:arm64": "node scripts/build.js linux arm64",
@@ -20,20 +21,22 @@
     "build:examples:win": "node scripts/build-all-examples.js win x64",
     "build:examples:win:arm64": "node scripts/build-all-examples.js win arm64",
     "build:examples:mac": "node scripts/build-all-examples.js mac x64",
-    "build:examples:mac:arm64": "node scripts/build-all-examples.js mac arm64", 
+    "build:examples:mac:arm64": "node scripts/build-all-examples.js mac arm64",
     "build:examples:linux": "node scripts/build-all-examples.js linux x64",
     "build:examples:linux:arm64": "node scripts/build-all-examples.js linux arm64",
     "dist": "electron-builder --publish=never",
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },"keywords": [
+  },
+  "keywords": [
     "electron",
     "session-management",
     "multi-account",
     "desktop",
     "cross-platform",
-    "pwa-client"  ],
+    "pwa-client"
+  ],
   "author": {
     "name": "Vagner Domingues Madeira",
     "email": "vagner_domingues@hotmail.com"
@@ -53,7 +56,8 @@
     "copyright": "Copyright © 2025 appname",
     "directories": {
       "output": "dist/appname"
-    },    "files": [
+    },
+    "files": [
       "main.js",
       "preload.js",
       "sessionManager.js",
@@ -63,7 +67,8 @@
     ],
     "forceCodeSigning": false,
     "buildDependenciesFromSource": false,
-    "nodeGypRebuild": false,    "mac": {
+    "nodeGypRebuild": false,
+    "mac": {
       "target": [
         {
           "target": "dir",
@@ -83,7 +88,8 @@
       "identity": null,
       "category": "public.app-category.social-networking",
       "icon": "assets/icon.png"
-    },    "win": {
+    },
+    "win": {
       "target": [
         {
           "target": "dir",
@@ -114,7 +120,8 @@
       "publisherName": "PWA Desktop",
       "icon": "assets/icon.ico",
       "executableName": "appname"
-    },    "nsis": {
+    },
+    "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },

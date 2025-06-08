@@ -72,16 +72,60 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 console.log(`📦 Building ${packageJson.build.productName || packageJson.name}...`);
 console.log(`📁 Output directory: ${packageJson.build.directories?.output || 'dist'}`);
 
+// Backup and modify package.json temporarily without permanently changing it
+let originalPackageJsonContent = null;
+
+if (!target) {
+  console.log(`🎯 Configuring build targets for ${arch} architecture only...`);
+  
+  // Backup the original package.json content
+  originalPackageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+  
+  // Create a deep copy and modify the architecture settings
+  const modifiedPackageJson = JSON.parse(JSON.stringify(packageJson));
+  
+  // Update macOS targets
+  if (modifiedPackageJson.build.mac && modifiedPackageJson.build.mac.target) {
+    modifiedPackageJson.build.mac.target.forEach(targetConfig => {
+      if (targetConfig.arch) {
+        targetConfig.arch = [arch];
+      }
+    });
+  }
+  
+  // Update Windows targets  
+  if (modifiedPackageJson.build.win && modifiedPackageJson.build.win.target) {
+    modifiedPackageJson.build.win.target.forEach(targetConfig => {
+      if (targetConfig.arch) {
+        targetConfig.arch = [arch];
+      }
+    });
+  }
+  
+  // Update Linux targets
+  if (modifiedPackageJson.build.linux && modifiedPackageJson.build.linux.target) {
+    modifiedPackageJson.build.linux.target.forEach(targetConfig => {
+      if (targetConfig.arch) {
+        targetConfig.arch = [arch];
+      }
+    });
+  }
+  
+  // Temporarily write the modified package.json
+  fs.writeFileSync(packageJsonPath, JSON.stringify(modifiedPackageJson, null, 2));
+  console.log(`📝 Temporarily modified package.json for ${arch} architecture only`);
+}
+
 try {
-  // Build command - if no target specified, use package.json targets for installers
+  // Build command - use standard package.json (which is temporarily modified)
   let buildCmd = `npx electron-builder --${platform} --${arch}`;
   
-  // Only add target config if explicitly specified, otherwise use package.json targets
+  // Only add target config if explicitly specified
   if (target) {
     buildCmd += ` --config.target=${target}`;
     console.log(`🎯 Using explicit target: ${target}`);
   } else {
-    console.log(`🎯 Using package.json targets for installer packages`);
+    console.log(`🎯 Using temporarily modified package.json for ${arch} architecture only`);
   }
   
   execSync(buildCmd, {
@@ -92,4 +136,10 @@ try {
 } catch (error) {
   console.error(`❌ Build failed for ${platform}-${arch}:`, error.message);
   process.exit(1);
+} finally {
+  // Restore the original package.json content
+  if (originalPackageJsonContent) {
+    fs.writeFileSync(packageJsonPath, originalPackageJsonContent);
+    console.log(`🔄 Restored original package.json`);
+  }
 }
