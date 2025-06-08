@@ -87,7 +87,11 @@ jobs:
         if [ -z "$APP_NAME" ]; then
           APP_NAME="${{ matrix.app }}"
         fi
-          echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-x64)..."
+        
+        # Export APP_NAME for use in subsequent steps
+        echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+        
+        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-x64)..."
         echo "🎯 Including only installer/executable files (no unpacked directories)"
         
         # Create archive based on platform with only installer/executable files
@@ -129,51 +133,121 @@ jobs:
             fi
           fi
           elif [ "${{ matrix.platform }}" = "linux" ]; then
-          # Linux: Include AppImage, deb files, and README (filter for x64 architecture)
-          echo "🐧 Linux: Creating archive with installer files..."          # Find x64-specific files (exclude ARM64 variants)
+          # Linux: Create separate archives for different package types
+          echo "🐧 Linux: Creating separate archives for different package types..."
+          
+          # Find x64-specific files (exclude ARM64 variants)
           # Use arrays to properly handle filenames with spaces
           readarray -t X64_APPIMAGES < <(ls *.AppImage 2>/dev/null | grep -v "arm64" | grep -v "aarch64" || true)
           readarray -t AMD64_DEBS < <(ls *amd64*.deb 2>/dev/null || true)
-            if [ ${#X64_APPIMAGES[@]} -gt 0 ] && [ ${#AMD64_DEBS[@]} -gt 0 ]; then
-            echo "✅ Found x64 AppImage and amd64 deb files, archiving..."
+          
+          # Create Debian/Ubuntu archive if .deb files exist
+          if [ ${#AMD64_DEBS[@]} -gt 0 ]; then
+            echo "✅ Found amd64 deb packages, creating Debian/Ubuntu archive..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "${AMD64_DEBS[@]}" *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "${AMD64_DEBS[@]}" 2>/dev/null
+          fi
+          
+          # Create General Linux archive if AppImage files exist
+          if [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
+            echo "✅ Found x64 AppImage files, creating General Linux archive..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "${X64_APPIMAGES[@]}" *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "${X64_APPIMAGES[@]}" 2>/dev/null
+          fi
+          
+          # Fallback: if we have both types but want a combined archive as backup
+          if [ ${#X64_APPIMAGES[@]} -gt 0 ] && [ ${#AMD64_DEBS[@]} -gt 0 ]; then
+            echo "✅ Creating combined Linux archive as backup..."
             tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" *.md 2>/dev/null || \
             tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" 2>/dev/null
-          elif [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
-            echo "✅ Found x64 AppImage files, archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" 2>/dev/null
-          elif [ ${#AMD64_DEBS[@]} -gt 0 ]; then
-            echo "✅ Found amd64 deb packages, archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${AMD64_DEBS[@]}" *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${AMD64_DEBS[@]}" 2>/dev/null
-          elif ls *.AppImage 2>/dev/null | head -1 > /dev/null; then
-            echo "✅ Found AppImage files (all architectures), archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage 2>/dev/null
-          elif ls *.deb 2>/dev/null | head -1 > /dev/null; then
-            echo "✅ Found deb packages (all architectures), archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb 2>/dev/null
+          elif [ ${#X64_APPIMAGES[@]} -gt 0 ] || [ ${#AMD64_DEBS[@]} -gt 0 ]; then
+            # If we only have one type, create a general archive too
+            if [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
+              cp "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
+            else
+              cp "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
+            fi
           else
-            echo "⚠️ No Linux packages found, creating info file..."
-            echo "Linux build completed but no packages found" > build-info.txt
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+            # Fallback for any other Linux files
+            echo "⚠️ Looking for other Linux packages..."
+            if ls *.AppImage 2>/dev/null | head -1 > /dev/null; then
+              echo "✅ Found AppImage files (all architectures), archiving..."
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage 2>/dev/null
+            elif ls *.deb 2>/dev/null | head -1 > /dev/null; then
+              echo "✅ Found deb packages (all architectures), archiving..."
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb *.md 2>/dev/null || \
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb 2>/dev/null
+            else
+              echo "⚠️ No Linux packages found, creating info file..."
+              echo "Linux build completed but no packages found" > build-info.txt
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+            fi
           fi
-        fi
-          # Verify archive was created and show contents
+        fi        # Verify archive was created and show contents
         if [ "${{ matrix.platform }}" = "win" ]; then
           echo "📋 Archive contents:"
           7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
+        elif [ "${{ matrix.platform }}" = "linux" ]; then
+          echo "📋 Linux archive contents:"
+          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" ]; then
+            echo "🐧 Debian/Ubuntu archive:"
+            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz"
+          fi
+          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" ]; then
+            echo "🐧 General Linux archive:"
+            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz"
+          fi
+          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" ]; then
+            echo "🐧 Combined Linux archive:"
+            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
+          fi
         else
           echo "📋 Archive contents:"
           tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
         fi
         
-    - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-x64 artifact
+    # Upload Windows and macOS artifacts
+    - name: Upload Windows artifact
+      if: matrix.platform == 'win'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }} (${{ matrix.platform }}-x64)
+        name: ${{ env.APP_NAME }} (windows-x64)
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
+        retention-days: 90
+        
+    - name: Upload macOS artifact  
+      if: matrix.platform == 'mac'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }} (apple-intel)
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
+        retention-days: 90
+        
+    # Upload Linux artifacts (separate by package type)
+    - name: Upload Linux Debian/Ubuntu artifact
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }} (debian / ubuntu / mint)
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz
+        retention-days: 90
+        
+    - name: Upload Linux General artifact
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }} (general linux distros)
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz
+        retention-days: 90
+        
+    # Fallback upload for Linux (combined archive)
+    - name: Upload Linux Combined artifact
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.APP_NAME }} (linux-x64)
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz
         retention-days: 90
 
   # Apple Silicon builds (macOS ARM64)
@@ -231,7 +305,7 @@ jobs:
         CSC_IDENTITY_AUTO_DISCOVERY: false
         SKIP_CODE_SIGNING: true
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
     - name: Prepare Apple Silicon DMG
       shell: bash
       run: |
@@ -243,6 +317,9 @@ jobs:
         if [ -z "$APP_NAME" ]; then
           APP_NAME="${{ matrix.app }}"
         fi
+        
+        # Export APP_NAME for use in subsequent steps
+        echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
 
         echo "🍎 Preparing Apple Silicon DMG for $APP_NAME..."
         
@@ -265,17 +342,17 @@ jobs:
           echo "✅ Found DMG (assuming ARM64): $MAIN_DMG"
           cp "$MAIN_DMG" "../../archives/$APP_NAME.dmg"
           echo "📦 Created: $APP_NAME.dmg"
-        else
-          echo "❌ No DMG files found for Apple Silicon build!"
+        else          echo "❌ No DMG files found for Apple Silicon build!"
           echo "Available files:"
           ls -la
           # Create a placeholder file
           echo "Apple Silicon build failed - no DMG generated" > "../../archives/${{ matrix.app }}-apple-silicon-failed.txt"
         fi
+        
     - name: Upload Apple Silicon artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }} (apple-silicon)
+        name: ${{ env.APP_NAME }} (apple-silicon)
         path: archives/*.dmg
         retention-days: 90
   create-release:
