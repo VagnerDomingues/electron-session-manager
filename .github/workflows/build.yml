@@ -252,24 +252,23 @@ jobs:
         # Debug: List all files in the directory
         echo "📁 Files in dist/${{ matrix.app }}:"
         ls -la
-        
         # Find the ARM64 DMG file and copy it directly
         if ls *arm64*.dmg 1> /dev/null 2>&1; then
           ARM64_DMG=$(ls *arm64*.dmg | head -1)
           echo "✅ Found Apple Silicon DMG: $ARM64_DMG"
-          # Copy the DMG directly to archives with clean naming
-          cp "$ARM64_DMG" "../../archives/${{ matrix.app }}-apple-silicon.dmg"
-          echo "📦 Created: ${{ matrix.app }}-apple-silicon.dmg"
+          # Copy the DMG with the proper app name
+          cp "$ARM64_DMG" "../../archives/$APP_NAME.dmg"
+          echo "📦 Created: $APP_NAME.dmg"
         elif ls *.dmg 1> /dev/null 2>&1; then
           # Fallback: if no arm64-specific DMG, assume the DMG is ARM64 (since we built for ARM64)
           MAIN_DMG=$(ls *.dmg | head -1)
           echo "✅ Found DMG (assuming ARM64): $MAIN_DMG"
-          cp "$MAIN_DMG" "../../archives/${{ matrix.app }}-apple-silicon.dmg"
-          echo "📦 Created: ${{ matrix.app }}-apple-silicon.dmg"
-        else
+          cp "$MAIN_DMG" "../../archives/$APP_NAME.dmg"
+          echo "📦 Created: $APP_NAME.dmg"        else
           echo "❌ No DMG files found for Apple Silicon build!"
           echo "Available files:"
-          ls -la          # Create a placeholder file
+          ls -la
+          # Create a placeholder file
           echo "Apple Silicon build failed - no DMG generated" > "../../archives/${{ matrix.app }}-apple-silicon-failed.txt"
         fi
         
@@ -277,9 +276,8 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.app }}-apple-silicon
-        path: archives/${{ matrix.app }}-apple-silicon.*
+        path: archives/*.dmg
         retention-days: 90
-
   create-release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build-x64-apps, build-apple-silicon-apps]  # Include both x64 and Apple Silicon builds
@@ -293,6 +291,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
+        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
@@ -312,46 +311,48 @@ jobs:
           artifacts/whatsappweb-win-x64/*.zip
           artifacts/whatsappweb-mac-x64/*.tar.gz
           artifacts/whatsappweb-linux-x64/*.tar.gz
-          artifacts/whatsappweb-mac-arm64/*.tar.gz
-        name: PWA Desktop Apps Release ${{ github.ref_name }}
+          artifacts/whatsappweb-apple-silicon/*.dmg        name: PWA Desktop Apps Release ${{ github.ref_name }}
         body: |
-          # 🚀 Electron Session Manager - Individual Desktop Apps (x64)
+          # 🚀 Electron Session Manager - Individual Desktop Apps
           
           Download only the apps you need! Each application is available as a separate download for your platform.
           
-          ## 📱 Available Applications (x64 Architecture)
+          ## 📱 Available Applications
           
-          ### 🎯 Asana - Project Management
+          ### 🎯 Asana Sessions - Project Management
           - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/asana-win-x64.zip)
           - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/asana-mac-x64.tar.gz)
           - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/asana-linux-x64.tar.gz)
           
-          ### 🤖 ChatGPT - AI Assistant
+          ### 🤖 ChatGPT Sessions - AI Assistant
           - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/chatgpt-win-x64.zip)
           - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/chatgpt-mac-x64.tar.gz)
           - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/chatgpt-linux-x64.tar.gz)
           
-          ### 🎮 Discord - Chat Platform  
+          ### 🎮 Discord Sessions - Chat Platform  
           - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/discord-win-x64.zip)
           - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/discord-mac-x64.tar.gz)
           - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/discord-linux-x64.tar.gz)
           
-          ### 📝 Notion - All-in-one Workspace
+          ### 📝 Notion Sessions - All-in-one Workspace
           - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/notion-win-x64.zip)
           - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/notion-mac-x64.tar.gz)
           - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/notion-linux-x64.tar.gz)
           
-          ### 💬 WhatsApp Web - Messaging
+          ### 💬 WhatsApp Sessions - Messaging
           - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/whatsappweb-win-x64.zip)
           - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/whatsappweb-mac-x64.tar.gz)
           - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/whatsappweb-linux-x64.tar.gz)
+          - [🍎 **macOS Apple Silicon (ARM64)**](../../releases/download/${{ github.ref_name }}/WhatsApp%20Sessions.dmg) ⭐ **NEW!**
           
           ## 🏗️ Architecture Support
           
-          This release includes **x64 (Intel/AMD)** builds only for maximum compatibility.
+          This release includes:
+          - **x64 (Intel/AMD)** builds for all platforms (Windows, macOS, Linux)
+          - **Apple Silicon (ARM64)** builds for macOS (WhatsApp Sessions only - more apps coming soon!)
           
           **Coming Soon:**
-          - ARM64 builds (Apple Silicon, Windows ARM, Raspberry Pi)
+          - ARM64 builds for all apps (Apple Silicon, Windows ARM, Raspberry Pi)
           - Mobile app versions (experimental)
           
           ## 🔧 Installation Instructions
