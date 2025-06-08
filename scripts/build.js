@@ -56,9 +56,10 @@ if (process.env.MAC_NOTARIZE_TEAM_ID) {
 // Parse command line arguments
 const args = process.argv.slice(2);
 const platform = args[0] || 'win';
-let target = args[1] || process.env[`${platform.toUpperCase()}_TARGET`] || 'dir';
+const arch = args[1] || 'x64';
+let target = args[2] || process.env[`${platform.toUpperCase()}_TARGET`] || 'dir';
 
-console.log(`Building for ${platform} with target ${target}...`);
+console.log(`Building for ${platform}-${arch} with target ${target}...`);
 
 // Read the package.json (which should already be configured for the specific app)
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
@@ -72,12 +73,12 @@ console.log(`📦 Building ${packageJson.build.productName || packageJson.name}.
 console.log(`📁 Output directory: ${packageJson.build.directories?.output || 'dist'}`);
 
 try {
-  execSync(`npx electron-builder --${platform} --config.target=${target}`, {
+  execSync(`npx electron-builder --${platform} --${arch} --config.target=${target}`, {
     stdio: 'inherit',
     env: process.env
   });
-  console.log(`✅ Build completed successfully for ${platform}!`);
+  console.log(`✅ Build completed successfully for ${platform}-${arch}!`);
 } catch (error) {
-  console.error(`❌ Build failed for ${platform}:`, error.message);
+  console.error(`❌ Build failed for ${platform}-${arch}:`, error.message);
   process.exit(1);
 }

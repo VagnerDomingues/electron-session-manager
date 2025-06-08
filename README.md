@@ -345,15 +345,15 @@ The built applications will be available in the `dist` folder, organized by app 
 
 Electron Session Manager includes GitHub Actions workflows that will:
 
-1. **On every push**: Build and test all examples
+1. **On every push**: Build and test individual app examples
 2. **On tag creation** (e.g., `v1.0.0`): 
-   - Build all examples for Windows and macOS
-   - Create a GitHub Release with downloadable archives
-   - Include all example apps ready for distribution
+   - Build each example app individually for Windows, macOS, and Linux
+   - Create a GitHub Release with separate download links for each app
+   - Allow users to download only the apps they want
 
 #### Creating a Release
 
-To create a release with all examples:
+To create a release with individual app downloads:
 
 ```bash
 git tag v1.0.0
@@ -361,10 +361,21 @@ git push origin v1.0.0
 ```
 
 This will trigger GitHub Actions to:
-- Build all 5 PWA examples
-- Package them for Windows (`.zip`) and macOS (`.tar.gz`)
-- Create a GitHub Release with download links
+- Build each of the 5 PWA examples individually:
+  - **Asana** (Windows `.zip`, macOS `.tar.gz`, Linux `.tar.gz`)
+  - **ChatGPT** (Windows `.zip`, macOS `.tar.gz`, Linux `.tar.gz`)
+  - **Discord** (Windows `.zip`, macOS `.tar.gz`, Linux `.tar.gz`)
+  - **Notion** (Windows `.zip`, macOS `.tar.gz`, Linux `.tar.gz`)
+  - **WhatsApp Web** (Windows `.zip`, macOS `.tar.gz`, Linux `.tar.gz`)
+- Create a GitHub Release with **15 individual download links** (5 apps × 3 platforms)
 - Include installation instructions for each platform
+
+#### Benefits of Individual App Downloads
+
+- **Users download only what they need** - No need to download all apps
+- **Smaller file sizes** - Each app is packaged separately
+- **Selective updates** - Update individual apps without re-downloading everything
+- **Better organization** - Clear separation between different applications
 
 
 ## Security Features

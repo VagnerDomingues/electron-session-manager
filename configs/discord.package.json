@@ -21,7 +21,8 @@
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },  "keywords": [
+  },
+  "keywords": [
     "electron",
     "session-management",
     "multi-account",
@@ -45,7 +46,8 @@
     "copyright": "Copyright © 2025 PWA Desktop",
     "directories": {
       "output": "dist/discord"
-    },    "files": [
+    },
+    "files": [
       "main.js",
       "preload.js",
       "sessionManager.js",
@@ -57,8 +59,6 @@
     "buildDependenciesFromSource": false,
     "nodeGypRebuild": false,
     "mac": {
-      "category": "public.app-category.social-networking",
-      "icon": "assets/Appicons/Discord.png",
       "target": [
         {
           "target": "dir",
@@ -66,27 +66,81 @@
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
-      "identity": null
+      "identity": null,
+      "category": "public.app-category.social-networking",
+      "icon": "assets/Appicons/Discord.png"
     },
     "win": {
-      "icon": "assets/Appicons/Discord.ico",
-      "target": "dir",
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "verifyUpdateCodeSignature": false,
       "requestedExecutionLevel": "asInvoker",
       "signAndEditExecutable": false,
       "signDlls": false,
       "publisherName": "PWA Desktop",
-      "executableName": "Discord",
-      "fileAssociations": [],
-      "artifactName": "${productName}.${ext}",
-      "rfc3161TimeStampServer": null,
-      "timeStampServer": null
+      "icon": "assets/Appicons/Discord.ico",
+      "executableName": "Discord"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "Office",
+      "icon": "assets/Appicons/Discord.png"
     }
   }
 }

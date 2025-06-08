@@ -13,9 +13,11 @@ const examples = [
     { name: 'whatsappweb', packageJson: 'whatsappweb.package.json', configFile: 'whatsappweb.env' }
 ];
 
-// Get platform from command line arguments
+// Get platform and architecture from command line arguments
 const platform = process.argv[2] || 'win'; // Default to Windows
+const arch = process.argv[3] || 'x64'; // Default to x64
 const validPlatforms = ['win', 'mac', 'linux'];
+const validArchs = ['x64', 'arm64'];
 
 if (!validPlatforms.includes(platform)) {
     console.error(`❌ Invalid platform: ${platform}`);
@@ -23,7 +25,13 @@ if (!validPlatforms.includes(platform)) {
     process.exit(1);
 }
 
-console.log(`🚀 Building all PWA examples for ${platform.toUpperCase()}...`);
+if (!validArchs.includes(arch)) {
+    console.error(`❌ Invalid architecture: ${arch}`);
+    console.log(`Valid architectures: ${validArchs.join(', ')}`);
+    process.exit(1);
+}
+
+console.log(`🚀 Building all PWA examples for ${platform.toUpperCase()}-${arch.toUpperCase()}...`);
 console.log(`📦 Found ${examples.length} example configurations\n`);
 
 // Helper function to parse .env file and extract variables
@@ -43,15 +51,14 @@ function parseEnvConfig(filePath) {
 }
 
 // Helper function to dynamically get executable path
-function getExecutablePath(appName, platform) {
-    if (platform === 'win') {
+function getExecutablePath(appName, platform) {    if (platform === 'win') {
         // For most apps, the executable name matches the app name with proper capitalization
         const executableNames = {
             'asana': 'Asana.exe',
             'chatgpt': 'ChatGPT.exe',
             'discord': 'Discord.exe',
             'notion': 'Notion.exe',
-            'whatsappweb': 'WhatsApp.exe'  // Special case for WhatsApp
+            'whatsappweb': 'WhatsApp Sessions.exe'  // Matches executableName in config
         };
         
         const executableName = executableNames[appName] || `${appName.charAt(0).toUpperCase() + appName.slice(1)}.exe`;
@@ -150,13 +157,12 @@ All trademarks belong to their respective owners.`;
                 // Write only the app config to .env (clean, no merging)
                 fs.writeFileSync(envPath, appConfig);
                 console.log(`🔧 Created .env with clean app config (no merging)`);
-                
-                // Run the build using the build script
-                console.log(`🔨 Building ${appName} for ${platform}...`);
-                execSync(`node scripts/build.js ${platform}`, {
+                  // Run the build using the build script
+                console.log(`🔨 Building ${appName} for ${platform}-${arch}...`);
+                execSync(`node scripts/build.js ${platform} ${arch}`, {
                     stdio: 'inherit',
                     cwd: process.cwd()
-                });                // Fix Windows executable metadata (only for Windows builds)
+                });// Fix Windows executable metadata (only for Windows builds)
                 if (platform === 'win') {
                     try {
                         console.log(`🔧 Fixing Windows executable metadata for ${appName}...`);

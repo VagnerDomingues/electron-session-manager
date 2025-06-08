@@ -21,7 +21,8 @@
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },  "keywords": [
+  },
+  "keywords": [
     "electron",
     "session-management",
     "multi-account",
@@ -38,7 +39,8 @@
   },
   "dependencies": {
     "dotenv": "^16.5.0"
-  },  "build": {
+  },
+  "build": {
     "appId": "com.yourname.whatsapp-sessions",
     "productName": "WhatsApp Sessions",
     "icon": "assets/Appicons/Whatsapp.ico",
@@ -53,9 +55,8 @@
       "node_modules/**/*",
       ".env"
     ],
-    "forceCodeSigning": false,    "mac": {
-      "category": "public.app-category.social-networking",
-      "icon": "assets/Appicons/Whatsapp.png",
+    "forceCodeSigning": false,
+    "mac": {
       "target": [
         {
           "target": "dir",
@@ -63,23 +64,81 @@
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
-      "identity": null
+      "identity": null,
+      "category": "public.app-category.social-networking",
+      "icon": "assets/Appicons/Whatsapp.png"
     },
     "win": {
-      "icon": "assets/Appicons/Whatsapp.ico",
-      "target": "dir",
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "verifyUpdateCodeSignature": false,
       "requestedExecutionLevel": "asInvoker",
       "signAndEditExecutable": false,
       "signDlls": false,
       "publisherName": "PWA Desktop",
+      "icon": "assets/Appicons/Whatsapp.ico",
       "executableName": "WhatsApp Sessions"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "Office",
+      "icon": "assets/Appicons/Whatsapp.png"
     }
   }
 }

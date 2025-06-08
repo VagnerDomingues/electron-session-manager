@@ -5,22 +5,29 @@
   "scripts": {
     "start": "electron .",
     "build": "node scripts/build.js",
-    "build:win": "node scripts/build.js win",
-    "build:mac": "node scripts/build.js mac",
-    "build:linux": "node scripts/build.js linux",
-    "build:win:nsis": "node scripts/build.js win nsis",
-    "build:win:portable": "node scripts/build.js win portable",
-    "build:mac:dmg": "node scripts/build.js mac dmg",
+    "build:win": "node scripts/build.js win x64",
+    "build:win:arm64": "node scripts/build.js win arm64",
+    "build:mac": "node scripts/build.js mac x64", 
+    "build:mac:arm64": "node scripts/build.js mac arm64",
+    "build:linux": "node scripts/build.js linux x64",
+    "build:linux:arm64": "node scripts/build.js linux arm64",
+    "build:win:nsis": "node scripts/build.js win x64 nsis",
+    "build:win:portable": "node scripts/build.js win x64 portable",
+    "build:mac:dmg": "node scripts/build.js mac x64 dmg",
     "build:all": "npm run build:win & npm run build:mac & npm run build:linux",
+    "build:all:multi": "npm run build:win & npm run build:win:arm64 & npm run build:mac & npm run build:mac:arm64 & npm run build:linux & npm run build:linux:arm64",
     "build:examples:all": "node scripts/build-all-examples.js",
-    "build:examples:win": "node scripts/build-all-examples.js win",
-    "build:examples:mac": "node scripts/build-all-examples.js mac",
-    "build:examples:linux": "node scripts/build-all-examples.js linux",
+    "build:examples:win": "node scripts/build-all-examples.js win x64",
+    "build:examples:win:arm64": "node scripts/build-all-examples.js win arm64",
+    "build:examples:mac": "node scripts/build-all-examples.js mac x64",
+    "build:examples:mac:arm64": "node scripts/build-all-examples.js mac arm64", 
+    "build:examples:linux": "node scripts/build-all-examples.js linux x64",
+    "build:examples:linux:arm64": "node scripts/build-all-examples.js linux arm64",
     "dist": "electron-builder --publish=never",
     "postinstall": "electron-builder install-app-deps",
     "config": "node config.js",
     "check-config": "node scripts/check-config.js"
-  },  "keywords": [
+  },"keywords": [
     "electron",
     "session-management",
     "multi-account",
@@ -53,10 +60,7 @@
     ],
     "forceCodeSigning": false,
     "buildDependenciesFromSource": false,
-    "nodeGypRebuild": false,
-    "mac": {
-      "category": "public.app-category.social-networking",
-      "icon": "assets/icon.png",
+    "nodeGypRebuild": false,    "mac": {
       "target": [
         {
           "target": "dir",
@@ -64,27 +68,79 @@
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "x64", 
+            "arm64"
+          ]
         }
       ],
-      "identity": null
-    },
-    "win": {
-      "icon": "assets/icon.ico",
-      "target": "dir",
+      "identity": null,
+      "category": "public.app-category.social-networking",
+      "icon": "assets/icon.png"
+    },    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "verifyUpdateCodeSignature": false,
       "requestedExecutionLevel": "asInvoker",
       "signAndEditExecutable": false,
       "signDlls": false,
-      "publisherName": "companyname",
-      "executableName": "appname",
-      "fileAssociations": [],
-      "artifactName": "${productName}.${ext}",
-      "rfc3161TimeStampServer": null,
-      "timeStampServer": null
-    },
-    "nsis": {
+      "publisherName": "PWA Desktop",
+      "icon": "assets/icon.ico",
+      "executableName": "appname"
+    },    "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "Office",
+      "icon": "assets/icon.png"
     }
   }
 }
