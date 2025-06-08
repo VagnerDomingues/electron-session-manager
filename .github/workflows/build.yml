@@ -124,25 +124,13 @@ jobs:
               tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
             fi
           fi
-        else
-          # Linux: Include AppImage, deb files, and README (exclude linux-unpacked folder)  
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md --exclude='linux-unpacked' 2>/dev/null || \
+        elif [ "${{ matrix.platform }}" = "linux" ]; then
+          # Linux: Include AppImage, deb files, and README
+          echo "🐧 Linux: Creating archive with installer files..."
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md 2>/dev/null || \
           tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
-        fi
-        
-        # Verify archive was created and show contents
-        if [ "${{ matrix.platform }}" = "win" ]; then
-          echo "📋 Archive contents:"
-          7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
-        else
-          echo "📋 Archive contents:"
-          tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
-        fi
-          # Linux: Include AppImage, deb files, and README (exclude linux-unpacked folder)  
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md --exclude='linux-unpacked' 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null || \
+          echo "No Linux packages found, creating info file..." && echo "Linux build completed but no packages found" > build-info.txt && tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
         fi
         
         # Verify archive was created and show contents
