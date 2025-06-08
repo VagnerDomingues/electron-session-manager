@@ -185,7 +185,7 @@ jobs:
       if: matrix.platform == 'mac'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.APP_NAME }} (apple-intel)
+        name: ${{ env.APP_NAME }} (Apple-Intel)
         path: |
           archives/*.dmg
           archives/*.tar.gz
@@ -196,7 +196,7 @@ jobs:
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.APP_NAME }} (debian & ubuntu & mint)
+        name: ${{ env.APP_NAME }} (Debian & Ubuntu)
         path: archives/*.deb
         retention-days: 90
 
@@ -204,7 +204,7 @@ jobs:
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.APP_NAME }} (general linux distros)
+        name: ${{ env.APP_NAME }} (General Linux)
         path: archives/*.AppImage
         retention-days: 90
 
@@ -303,7 +303,7 @@ jobs:
     - name: Upload Apple Silicon artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.APP_NAME }} (apple-silicon)
+        name: ${{ env.APP_NAME }} (Apple-Silicon)
         path: archives/*.dmg
         retention-days: 90
         
