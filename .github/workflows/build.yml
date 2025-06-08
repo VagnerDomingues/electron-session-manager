@@ -172,7 +172,7 @@ jobs:
     - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-x64 artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }}-${{ matrix.platform }}-x64
+        name: ${{ matrix.app }} (${{ matrix.platform }}-x64)
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
         retention-days: 90
 
@@ -243,7 +243,7 @@ jobs:
         if [ -z "$APP_NAME" ]; then
           APP_NAME="${{ matrix.app }}"
         fi
-        
+
         echo "🍎 Preparing Apple Silicon DMG for $APP_NAME..."
         
         # Navigate to build directory
@@ -275,7 +275,7 @@ jobs:
     - name: Upload Apple Silicon artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }}-apple-silicon
+        name: ${{ matrix.app }} (apple-silicon)
         path: archives/*.dmg
         retention-days: 90
   create-release:
@@ -311,9 +311,10 @@ jobs:
           artifacts/whatsappweb-win-x64/*.zip
           artifacts/whatsappweb-mac-x64/*.tar.gz
           artifacts/whatsappweb-linux-x64/*.tar.gz
-          artifacts/whatsappweb-apple-silicon/*.dmg        name: PWA Desktop Apps Release ${{ github.ref_name }}
+          artifacts/whatsappweb-apple-silicon/*.dmg
+        name: Electron Session Manager Apps Release ${{ github.ref_name }}
         body: |
-          # 🚀 Electron Session Manager - Individual Desktop Apps
+          # 🚀 Electron Session Manager
           
           Download only the apps you need! Each application is available as a separate download for your platform.
           
@@ -371,9 +372,9 @@ jobs:
           - **macOS**: Allow the app in System Preferences > Security & Privacy  
           - **Linux**: Mark the executable as trusted
           
-          ## 📝 Customization
+          ## 📝 For Devs
           
-          Want to build your own PWA or customize these apps? Visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
+          Want to build your own PWA with session management? or customize these apps? Visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
           
           ---
           
