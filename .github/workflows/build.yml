@@ -141,47 +141,37 @@ jobs:
           readarray -t X64_APPIMAGES < <(ls *.AppImage 2>/dev/null | grep -v "arm64" | grep -v "aarch64" || true)
           readarray -t AMD64_DEBS < <(ls *amd64*.deb 2>/dev/null || true)
           
-          # Create Debian/Ubuntu archive if .deb files exist
+          # Copy .deb files directly (no archiving needed for .deb packages)
           if [ ${#AMD64_DEBS[@]} -gt 0 ]; then
-            echo "✅ Found amd64 deb packages, creating Debian/Ubuntu archive..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "${AMD64_DEBS[@]}" *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "${AMD64_DEBS[@]}" 2>/dev/null
+            echo "✅ Found amd64 deb packages, copying directly to archives..."
+            for deb in "${AMD64_DEBS[@]}"; do
+              cp "$deb" "../../archives/"
+              echo "📦 Copied: $deb"
+            done
           fi
           
-          # Create General Linux archive if AppImage files exist
+          # Copy AppImage files directly (no archiving needed for AppImage)
           if [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
-            echo "✅ Found x64 AppImage files, creating General Linux archive..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "${X64_APPIMAGES[@]}" *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "${X64_APPIMAGES[@]}" 2>/dev/null
-          fi
+            echo "✅ Found x64 AppImage files, copying directly to archives..."
+            for appimage in "${X64_APPIMAGES[@]}"; do
+              cp "$appimage" "../../archives/"
+              echo "📦 Copied: $appimage"
+            done
+          fi          
           
-          # Fallback: if we have both types but want a combined archive as backup
-          if [ ${#X64_APPIMAGES[@]} -gt 0 ] && [ ${#AMD64_DEBS[@]} -gt 0 ]; then
-            echo "✅ Creating combined Linux archive as backup..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" 2>/dev/null
-          elif [ ${#X64_APPIMAGES[@]} -gt 0 ] || [ ${#AMD64_DEBS[@]} -gt 0 ]; then
-            # If we only have one type, create a general archive too
-            if [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
-              cp "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
-            else
-              cp "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
-            fi
-          else
-            # Fallback for any other Linux files
+          # Fallback: copy any other Linux files directly
+          if [ ${#X64_APPIMAGES[@]} -eq 0 ] && [ ${#AMD64_DEBS[@]} -eq 0 ]; then
             echo "⚠️ Looking for other Linux packages..."
             if ls *.AppImage 2>/dev/null | head -1 > /dev/null; then
-              echo "✅ Found AppImage files (all architectures), archiving..."
-              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
-              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage 2>/dev/null
+              echo "✅ Found AppImage files (all architectures), copying directly..."
+              cp *.AppImage "../../archives/"
             elif ls *.deb 2>/dev/null | head -1 > /dev/null; then
-              echo "✅ Found deb packages (all architectures), archiving..."
-              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb *.md 2>/dev/null || \
-              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb 2>/dev/null
+              echo "✅ Found deb packages (all architectures), copying directly..."
+              cp *.deb "../../archives/"
             else
               echo "⚠️ No Linux packages found, creating info file..."
               echo "Linux build completed but no packages found" > build-info.txt
-              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+              cp build-info.txt "../../archives/${{ matrix.app }}-linux-build-info.txt"
             fi
           fi
         fi        # Verify archive was created and show contents
@@ -189,19 +179,9 @@ jobs:
           echo "📋 Archive contents:"
           7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
         elif [ "${{ matrix.platform }}" = "linux" ]; then
-          echo "📋 Linux archive contents:"
-          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz" ]; then
-            echo "🐧 Debian/Ubuntu archive:"
-            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz"
-          fi
-          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz" ]; then
-            echo "🐧 General Linux archive:"
-            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz"
-          fi
-          if [ -f "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" ]; then
-            echo "🐧 Combined Linux archive:"
-            tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
-          fi
+          echo "📋 Linux files copied to archives:"
+          echo "🐧 Contents in archives directory:"
+          ls -la "../../archives/"
         else
           echo "📋 Archive contents:"
           tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
@@ -214,7 +194,6 @@ jobs:
         name: ${{ env.APP_NAME }} (windows-x64)
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
         retention-days: 90
-        
     - name: Upload macOS artifact  
       if: matrix.platform == 'mac'
       uses: actions/upload-artifact@v4
@@ -229,7 +208,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.APP_NAME }} (debian & ubuntu & mint)
-        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-deb.tar.gz
+        path: archives/*.deb
         retention-days: 90
 
     - name: Upload Linux General artifact
@@ -237,7 +216,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.APP_NAME }} (general linux distros)
-        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64-appimage.tar.gz
+        path: archives/*.AppImage
         retention-days: 90
         
 #     # Fallback upload for Linux (combined archive)
