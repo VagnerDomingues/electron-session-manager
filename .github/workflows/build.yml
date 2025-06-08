@@ -264,14 +264,14 @@ jobs:
           MAIN_DMG=$(ls *.dmg | head -1)
           echo "✅ Found DMG (assuming ARM64): $MAIN_DMG"
           cp "$MAIN_DMG" "../../archives/$APP_NAME.dmg"
-          echo "📦 Created: $APP_NAME.dmg"        else
+          echo "📦 Created: $APP_NAME.dmg"
+        else
           echo "❌ No DMG files found for Apple Silicon build!"
           echo "Available files:"
           ls -la
           # Create a placeholder file
           echo "Apple Silicon build failed - no DMG generated" > "../../archives/${{ matrix.app }}-apple-silicon-failed.txt"
         fi
-        
     - name: Upload Apple Silicon artifact
       uses: actions/upload-artifact@v4
       with:
