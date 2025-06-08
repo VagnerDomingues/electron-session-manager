@@ -1,7 +1,7 @@
 {
-  "name": "chatgpt-desktop",
+  "name": "chatgpt-sessions",
   "version": "1.0.0",
-  "description": "ChatGPT - Desktop Application",
+  "description": "ChatGPT Sessions - Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -44,7 +44,7 @@
   },
   "build": {
     "appId": "com.companyname.chatgpt",
-    "productName": "ChatGPT",
+    "productName": "ChatGPT Sessions",
     "icon": "assets/Appicons/ChatGPT.ico",
     "directories": {
       "output": "dist/chatgpt"

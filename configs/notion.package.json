@@ -1,7 +1,7 @@
 {
-  "name": "notion-desktop",
+  "name": "notion-sessions",
   "version": "1.0.0",
-  "description": "Notion - Desktop Application",
+  "description": "Notion Sessions - Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -44,7 +44,7 @@
   },
   "build": {
     "appId": "com.companyname.notion",
-    "productName": "Notion",
+    "productName": "Notion Sessions",
     "icon": "assets/Appicons/Notion.ico",
     "directories": {
       "output": "dist/notion"
