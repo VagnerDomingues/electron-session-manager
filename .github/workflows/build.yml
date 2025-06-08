@@ -125,24 +125,23 @@ jobs:
             fi
           fi        elif [ "${{ matrix.platform }}" = "linux" ]; then
           # Linux: Include AppImage, deb files, and README (filter for x64 architecture)
-          echo "🐧 Linux: Creating archive with installer files..."
+          echo "🐧 Linux: Creating archive with installer files..."          # Find x64-specific files (exclude ARM64 variants)
+          # Use arrays to properly handle filenames with spaces
+          readarray -t X64_APPIMAGES < <(ls *.AppImage 2>/dev/null | grep -v "arm64" | grep -v "aarch64" || true)
+          readarray -t AMD64_DEBS < <(ls *amd64*.deb 2>/dev/null || true)
           
-          # Find x64-specific files (exclude ARM64 variants)
-          X64_APPIMAGES=$(ls *.AppImage 2>/dev/null | grep -v "arm64" | grep -v "aarch64" || true)
-          AMD64_DEBS=$(ls *amd64*.deb 2>/dev/null || true)
-          
-          if [ -n "$X64_APPIMAGES" ] && [ -n "$AMD64_DEBS" ]; then
+          if [ ${#X64_APPIMAGES[@]} -gt 0 ] && [ ${#AMD64_DEBS[@]} -gt 0 ]; then
             echo "✅ Found x64 AppImage and amd64 deb files, archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES $AMD64_DEBS *.yml 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES $AMD64_DEBS 2>/dev/null
-          elif [ -n "$X64_APPIMAGES" ]; then
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" *.yml 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" "${AMD64_DEBS[@]}" 2>/dev/null
+          elif [ ${#X64_APPIMAGES[@]} -gt 0 ]; then
             echo "✅ Found x64 AppImage files, archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES *.yml *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES 2>/dev/null
-          elif [ -n "$AMD64_DEBS" ]; then
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${X64_APPIMAGES[@]}" 2>/dev/null
+          elif [ ${#AMD64_DEBS[@]} -gt 0 ]; then
             echo "✅ Found amd64 deb packages, archiving..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $AMD64_DEBS *.yml *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $AMD64_DEBS 2>/dev/null
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${AMD64_DEBS[@]}" *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" "${AMD64_DEBS[@]}" 2>/dev/null
           elif ls *.AppImage 2>/dev/null | head -1 > /dev/null; then
             echo "✅ Found AppImage files (all architectures), archiving..."
             tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.yml *.md 2>/dev/null || \
