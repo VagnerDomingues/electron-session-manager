@@ -9,13 +9,13 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  build-individual-apps:
+  # Build x64 apps (stable)
+  build-x64-apps:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         app: [asana, chatgpt, discord, notion, whatsappweb]
-        arch: [x64, arm64]
         include:
           - os: windows-latest
             platform: win
@@ -37,10 +37,10 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-${{ matrix.arch }}
+    - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-x64
       shell: bash
       run: |
-        echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-${{ matrix.arch }}..."
+        echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-x64..."
         
         # Backup current files if they exist
         if [ -f "package.json" ]; then
@@ -54,8 +54,8 @@ jobs:
         cp "configs/${{ matrix.app }}.package.json" package.json
         cp "configs/${{ matrix.app }}.env" .env
         
-        # Build the app for specific architecture
-        node scripts/build.js ${{ matrix.platform }} ${{ matrix.arch }}
+        # Build the app for x64 architecture only
+        node scripts/build.js ${{ matrix.platform }} x64
         
         # Restore original files
         if [ -f "temp.package.json.backup" ]; then
@@ -67,8 +67,7 @@ jobs:
           mv temp.env.backup .env
         else
           rm -f .env
-        fi
-      env:
+        fi      env:
         CSC_IDENTITY_AUTO_DISCOVERY: false
         SKIP_CODE_SIGNING: true
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,26 +84,154 @@ jobs:
           APP_NAME="${{ matrix.app }}"
         fi
         
-        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }})..."
+        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-x64)..."
+        echo "🎯 Including only installer/executable files (no unpacked directories)"
         
-        # Create archive based on platform
+        # Create archive based on platform with only installer/executable files
+        cd "dist/${{ matrix.app }}"
+        
         if [ "${{ matrix.platform }}" = "win" ]; then
-          cd "dist/${{ matrix.app }}"
-          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }}.zip" ./*
+          # Windows: Include NSIS installer, portable exe, and README (exclude win-unpacked folder)
+          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked
+        elif [ "${{ matrix.platform }}" = "mac" ]; then
+          # macOS: Include DMG files and README (exclude mac/mac-universal folders)
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.md --exclude='mac' --exclude='mac-universal' 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.md 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
         else
-          cd "dist/${{ matrix.app }}"
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" ./*
+          # Linux: Include AppImage, deb files, and README (exclude linux-unpacked folder)  
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md --exclude='linux-unpacked' 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
         fi
         
-    - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }} artifact
+        # Verify archive was created and show contents
+        if [ "${{ matrix.platform }}" = "win" ]; then
+          echo "📋 Archive contents:"
+          7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
+        else
+          echo "📋 Archive contents:"
+          tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
+        fi
+          # Linux: Include AppImage, deb files, and README (exclude linux-unpacked folder)  
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md --exclude='linux-unpacked' 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
+          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
+        fi
+        
+        # Verify archive was created and show contents
+        if [ "${{ matrix.platform }}" = "win" ]; then
+          echo "📋 Archive contents:"
+          7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
+        else
+          echo "📋 Archive contents:"
+          tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz"
+        fi
+        
+    - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-x64 artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }}
-        path: archives/${{ matrix.app }}-${{ matrix.platform }}-${{ matrix.arch }}.*
+        name: ${{ matrix.app }}-${{ matrix.platform }}-x64
+        path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
         retention-days: 90
+
+  # ARM64 builds (commented out for now - enable when stable)
+  # build-arm64-apps:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, macos-latest, ubuntu-latest]
+  #       app: [asana, chatgpt, discord, notion, whatsappweb]
+  #       include:
+  #         - os: windows-latest
+  #           platform: win
+  #         - os: macos-latest  
+  #           platform: mac
+  #         - os: ubuntu-latest
+  #           platform: linux
+  #       
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #     
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  #       
+  #   - name: Install dependencies
+  #     run: npm ci
+  #     
+  #   - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-arm64
+  #     shell: bash
+  #     run: |
+  #       echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-arm64..."
+  #       
+  #       # Backup current files if they exist
+  #       if [ -f "package.json" ]; then
+  #         cp package.json temp.package.json.backup
+  #       fi
+  #       if [ -f ".env" ]; then
+  #         cp .env temp.env.backup
+  #       fi
+  #       
+  #       # Copy app-specific configuration
+  #       cp "configs/${{ matrix.app }}.package.json" package.json
+  #       cp "configs/${{ matrix.app }}.env" .env
+  #       
+  #       # Build the app for arm64 architecture
+  #       node scripts/build.js ${{ matrix.platform }} arm64
+  #       
+  #       # Restore original files
+  #       if [ -f "temp.package.json.backup" ]; then
+  #         mv temp.package.json.backup package.json
+  #       else
+  #         rm -f package.json
+  #       fi
+  #       if [ -f "temp.env.backup" ]; then
+  #         mv temp.env.backup .env
+  #       else
+  #         rm -f .env
+  #       fi
+  #     env:
+  #       CSC_IDENTITY_AUTO_DISCOVERY: false
+  #       SKIP_CODE_SIGNING: true
+  #       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       
+  #   - name: Create app-specific archive
+  #     shell: bash
+  #     run: |
+  #       # Create archive directory
+  #       mkdir -p archives
+  #       
+  #       # Get app display name from config
+  #       APP_NAME=$(grep "APP_NAME=" "configs/${{ matrix.app }}.env" | cut -d'=' -f2 | tr -d '"')
+  #       if [ -z "$APP_NAME" ]; then
+  #         APP_NAME="${{ matrix.app }}"
+  #       fi
+  #       
+  #       echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-arm64)..."
+  #       
+  #       # Create archive based on platform
+  #       if [ "${{ matrix.platform }}" = "win" ]; then
+  #         cd "dist/${{ matrix.app }}"
+  #         7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.zip" ./*
+  #       else
+  #         cd "dist/${{ matrix.app }}"
+  #         tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" ./*
+  #       fi
+  #       
+  #   - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-arm64 artifact
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: ${{ matrix.app }}-${{ matrix.platform }}-arm64
+  #       path: archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.*
+  #       retention-days: 90
+
   create-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build-individual-apps
+    needs: build-x64-apps  # Only depend on x64 builds for now
     runs-on: ubuntu-latest
     
     steps:
@@ -121,116 +248,64 @@ jobs:
       with:
         files: |
           artifacts/asana-win-x64/*.zip
-          artifacts/asana-win-arm64/*.zip
           artifacts/asana-mac-x64/*.tar.gz
-          artifacts/asana-mac-arm64/*.tar.gz
           artifacts/asana-linux-x64/*.tar.gz
-          artifacts/asana-linux-arm64/*.tar.gz
           artifacts/chatgpt-win-x64/*.zip
-          artifacts/chatgpt-win-arm64/*.zip
           artifacts/chatgpt-mac-x64/*.tar.gz
-          artifacts/chatgpt-mac-arm64/*.tar.gz
           artifacts/chatgpt-linux-x64/*.tar.gz
-          artifacts/chatgpt-linux-arm64/*.tar.gz
           artifacts/discord-win-x64/*.zip
-          artifacts/discord-win-arm64/*.zip
           artifacts/discord-mac-x64/*.tar.gz
-          artifacts/discord-mac-arm64/*.tar.gz
           artifacts/discord-linux-x64/*.tar.gz
-          artifacts/discord-linux-arm64/*.tar.gz
           artifacts/notion-win-x64/*.zip
-          artifacts/notion-win-arm64/*.zip
           artifacts/notion-mac-x64/*.tar.gz
-          artifacts/notion-mac-arm64/*.tar.gz
           artifacts/notion-linux-x64/*.tar.gz
-          artifacts/notion-linux-arm64/*.tar.gz
           artifacts/whatsappweb-win-x64/*.zip
-          artifacts/whatsappweb-win-arm64/*.zip
           artifacts/whatsappweb-mac-x64/*.tar.gz
-          artifacts/whatsappweb-mac-arm64/*.tar.gz
           artifacts/whatsappweb-linux-x64/*.tar.gz
-          artifacts/whatsappweb-linux-arm64/*.tar.gz
         name: PWA Desktop Apps Release ${{ github.ref_name }}
         body: |
-          # 🚀 Electron Session Manager - Individual Desktop Apps
+          # 🚀 Electron Session Manager - Individual Desktop Apps (x64)
           
-          Download only the apps you need! Each application is available as a separate download for your platform and architecture.
+          Download only the apps you need! Each application is available as a separate download for your platform.
           
-          ## 📱 Available Applications
+          ## 📱 Available Applications (x64 Architecture)
           
           ### 🎯 Asana - Project Management
-          **Windows**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/asana-win-x64.zip)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/asana-win-arm64.zip)
-          
-          **macOS**  
-          - [📦 x64 (Intel)](../../releases/download/${{ github.ref_name }}/asana-mac-x64.tar.gz)
-          - [📦 ARM64 (Apple Silicon)](../../releases/download/${{ github.ref_name }}/asana-mac-arm64.tar.gz)
-          
-          **Linux**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/asana-linux-x64.tar.gz)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/asana-linux-arm64.tar.gz)
+          - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/asana-win-x64.zip)
+          - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/asana-mac-x64.tar.gz)
+          - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/asana-linux-x64.tar.gz)
           
           ### 🤖 ChatGPT - AI Assistant
-          **Windows**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/chatgpt-win-x64.zip)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/chatgpt-win-arm64.zip)
-          
-          **macOS**
-          - [📦 x64 (Intel)](../../releases/download/${{ github.ref_name }}/chatgpt-mac-x64.tar.gz)
-          - [📦 ARM64 (Apple Silicon)](../../releases/download/${{ github.ref_name }}/chatgpt-mac-arm64.tar.gz)
-          
-          **Linux**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/chatgpt-linux-x64.tar.gz)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/chatgpt-linux-arm64.tar.gz)
+          - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/chatgpt-win-x64.zip)
+          - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/chatgpt-mac-x64.tar.gz)
+          - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/chatgpt-linux-x64.tar.gz)
           
           ### 🎮 Discord - Chat Platform  
-          **Windows**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/discord-win-x64.zip)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/discord-win-arm64.zip)
-          
-          **macOS**
-          - [📦 x64 (Intel)](../../releases/download/${{ github.ref_name }}/discord-mac-x64.tar.gz)
-          - [📦 ARM64 (Apple Silicon)](../../releases/download/${{ github.ref_name }}/discord-mac-arm64.tar.gz)
-          
-          **Linux**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/discord-linux-x64.tar.gz)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/discord-linux-arm64.tar.gz)
+          - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/discord-win-x64.zip)
+          - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/discord-mac-x64.tar.gz)
+          - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/discord-linux-x64.tar.gz)
           
           ### 📝 Notion - All-in-one Workspace
-          **Windows**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/notion-win-x64.zip)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/notion-win-arm64.zip)
-          
-          **macOS**
-          - [📦 x64 (Intel)](../../releases/download/${{ github.ref_name }}/notion-mac-x64.tar.gz)
-          - [📦 ARM64 (Apple Silicon)](../../releases/download/${{ github.ref_name }}/notion-mac-arm64.tar.gz)
-          
-          **Linux**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/notion-linux-x64.tar.gz)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/notion-linux-arm64.tar.gz)
+          - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/notion-win-x64.zip)
+          - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/notion-mac-x64.tar.gz)
+          - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/notion-linux-x64.tar.gz)
           
           ### 💬 WhatsApp Web - Messaging
-          **Windows**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/whatsappweb-win-x64.zip)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/whatsappweb-win-arm64.zip)
-          
-          **macOS**
-          - [📦 x64 (Intel)](../../releases/download/${{ github.ref_name }}/whatsappweb-mac-x64.tar.gz)
-          - [📦 ARM64 (Apple Silicon)](../../releases/download/${{ github.ref_name }}/whatsappweb-mac-arm64.tar.gz)
-          
-          **Linux**
-          - [📦 x64 (Intel/AMD)](../../releases/download/${{ github.ref_name }}/whatsappweb-linux-x64.tar.gz)
-          - [📦 ARM64](../../releases/download/${{ github.ref_name }}/whatsappweb-linux-arm64.tar.gz)
+          - [📦 Windows x64](../../releases/download/${{ github.ref_name }}/whatsappweb-win-x64.zip)
+          - [📦 macOS x64 (Intel)](../../releases/download/${{ github.ref_name }}/whatsappweb-mac-x64.tar.gz)
+          - [📦 Linux x64](../../releases/download/${{ github.ref_name }}/whatsappweb-linux-x64.tar.gz)
           
           ## 🏗️ Architecture Support
           
-          - **x64**: Traditional Intel/AMD 64-bit processors
-          - **ARM64**: ARM-based processors (Apple Silicon, Windows ARM, Raspberry Pi 4+)
+          This release includes **x64 (Intel/AMD)** builds only for maximum compatibility.
+          
+          **Coming Soon:**
+          - ARM64 builds (Apple Silicon, Windows ARM, Raspberry Pi)
+          - Mobile app versions (experimental)
           
           ## 🔧 Installation Instructions
           
-          1. **Download** the app you want for your platform and architecture
+          1. **Download** the app you want for your platform
           2. **Extract** the archive to a folder
           3. **Run** the application:
              - **Windows**: Double-click the `.exe` file
@@ -255,143 +330,144 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # Experimental Mobile Builds (Beta)
-  build-mobile-apps:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
-        app: [asana, chatgpt, discord, notion, whatsappweb]
-        platform: [android, ios]
-        exclude:
-          # iOS can only be built on macOS
-          - os: ubuntu-latest
-            platform: ios
-        include:
-          - os: macos-latest
-            platform: ios
-            target_ext: .ipa
-          - os: ubuntu-latest  
-            platform: android
-            target_ext: .apk
-          - os: macos-latest
-            platform: android
-            target_ext: .apk
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Setup Capacitor for mobile builds
-      run: |
-        npm install -g @capacitor/cli @capacitor/core
-        npm install @capacitor/android @capacitor/ios
-        
-    - name: Setup Android SDK (for Android builds)
-      if: matrix.platform == 'android'
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 33
-        
-    - name: Setup Xcode (for iOS builds)
-      if: matrix.platform == 'ios'
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable
-        
-    - name: Build mobile app (BETA)
-      shell: bash
-      run: |
-        echo "📱 Building EXPERIMENTAL ${{ matrix.app }} for ${{ matrix.platform }}..."
-        echo "⚠️  This is a beta feature - mobile builds are experimental"
-        
-        # Backup current files if they exist
-        if [ -f "package.json" ]; then
-          cp package.json temp.package.json.backup
-        fi
-        if [ -f ".env" ]; then
-          cp .env temp.env.backup
-        fi
-        
-        # Copy app-specific configuration
-        cp "configs/${{ matrix.app }}.package.json" package.json
-        cp "configs/${{ matrix.app }}.env" .env
-        
-        # Initialize Capacitor project
-        npx cap init "${{ matrix.app }}" "com.pwadesktop.${{ matrix.app }}"
-        
-        # Create basic web assets for mobile
-        mkdir -p www
-        cat > www/index.html << 'EOF'
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${{ matrix.app }}</title>
-          <style>
-            body { margin: 0; padding: 0; }
-            webview { width: 100vw; height: 100vh; border: none; }
-          </style>
-        </head>
-        <body>
-          <webview id="main-webview"></webview>
-          <script>
-            const webview = document.getElementById('main-webview');
-            // Load the PWA URL from environment
-            const url = process.env.PWA_URL || 'https://web.whatsapp.com';
-            webview.src = url;
-          </script>
-        </body>
-        </html>
-        EOF
-        
-        # Add platform
-        if [ "${{ matrix.platform }}" = "android" ]; then
-          npx cap add android
-          npx cap sync android
-          cd android
-          ./gradlew assembleDebug
-          cd ..
-          mkdir -p dist/mobile
-          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/mobile/${{ matrix.app }}-android.apk"
-        elif [ "${{ matrix.platform }}" = "ios" ]; then
-          npx cap add ios
-          npx cap sync ios
-          # Note: iOS builds require code signing, this is just a structure setup
-          echo "📱 iOS project structure created. Manual Xcode build required for distribution."
-          mkdir -p dist/mobile
-          echo "iOS project ready for Xcode build" > "dist/mobile/${{ matrix.app }}-ios-project.txt"
-        fi
-        
-        # Restore original files
-        if [ -f "temp.package.json.backup" ]; then
-          mv temp.package.json.backup package.json
-        else
-          rm -f package.json
-        fi
-        if [ -f "temp.env.backup" ]; then
-          mv temp.env.backup .env
-        else
-          rm -f .env
-        fi
-      env:
-        CSC_IDENTITY_AUTO_DISCOVERY: false
-        SKIP_CODE_SIGNING: true
-        
-    - name: Upload mobile artifact (BETA)
-      uses: actions/upload-artifact@v4
-      if: success()
-      with:
-        name: ${{ matrix.app }}-${{ matrix.platform }}-beta
-        path: dist/mobile/${{ matrix.app }}-${{ matrix.platform }}*
-        retention-days: 30
+
+  # Mobile Builds (BETA) - Commented out for now
+  # build-mobile-apps:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [macos-latest, ubuntu-latest]
+  #       app: [asana, chatgpt, discord, notion, whatsappweb]
+  #       platform: [android, ios]
+  #       exclude:
+  #         # iOS can only be built on macOS
+  #         - os: ubuntu-latest
+  #           platform: ios
+  #       include:
+  #         - os: macos-latest
+  #           platform: ios
+  #           target_ext: .ipa
+  #         - os: ubuntu-latest  
+  #           platform: android
+  #           target_ext: .apk
+  #         - os: macos-latest
+  #           platform: android
+  #           target_ext: .apk
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #     
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  #       
+  #   - name: Install dependencies
+  #     run: npm ci
+  #     
+  #   - name: Setup Capacitor for mobile builds
+  #     run: |
+  #       npm install -g @capacitor/cli @capacitor/core
+  #       npm install @capacitor/android @capacitor/ios
+  #       
+  #   - name: Setup Android SDK (for Android builds)
+  #     if: matrix.platform == 'android'
+  #     uses: android-actions/setup-android@v3
+  #     with:
+  #       api-level: 33
+  #       
+  #   - name: Setup Xcode (for iOS builds)
+  #     if: matrix.platform == 'ios'
+  #     uses: maxim-lobanov/setup-xcode@v1
+  #     with:
+  #       xcode-version: latest-stable
+  #       
+  #   - name: Build mobile app (BETA)
+  #     shell: bash
+  #     run: |
+  #       echo "📱 Building EXPERIMENTAL ${{ matrix.app }} for ${{ matrix.platform }}..."
+  #       echo "⚠️  This is a beta feature - mobile builds are experimental"
+  #       
+  #       # Backup current files if they exist
+  #       if [ -f "package.json" ]; then
+  #         cp package.json temp.package.json.backup
+  #       fi
+  #       if [ -f ".env" ]; then
+  #         cp .env temp.env.backup
+  #       fi
+  #       
+  #       # Copy app-specific configuration
+  #       cp "configs/${{ matrix.app }}.package.json" package.json
+  #       cp "configs/${{ matrix.app }}.env" .env
+  #       
+  #       # Initialize Capacitor project
+  #       npx cap init "${{ matrix.app }}" "com.pwadesktop.${{ matrix.app }}"
+  #       
+  #       # Create basic web assets for mobile
+  #       mkdir -p www
+  #       cat > www/index.html << 'EOF'
+  #       <!DOCTYPE html>
+  #       <html>
+  #       <head>
+  #         <meta charset="utf-8">
+  #         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  #         <title>${{ matrix.app }}</title>
+  #         <style>
+  #           body { margin: 0; padding: 0; }
+  #           webview { width: 100vw; height: 100vh; border: none; }
+  #         </style>
+  #       </head>
+  #       <body>
+  #         <webview id="main-webview"></webview>
+  #         <script>
+  #           const webview = document.getElementById('main-webview');
+  #           // Load the PWA URL from environment
+  #           const url = process.env.PWA_URL || 'https://web.whatsapp.com';
+  #           webview.src = url;
+  #         </script>
+  #       </body>
+  #       </html>
+  #       EOF
+  #       
+  #       # Add platform
+  #       if [ "${{ matrix.platform }}" = "android" ]; then
+  #         npx cap add android
+  #         npx cap sync android
+  #         cd android
+  #         ./gradlew assembleDebug
+  #         cd ..
+  #         mkdir -p dist/mobile
+  #         cp android/app/build/outputs/apk/debug/app-debug.apk "dist/mobile/${{ matrix.app }}-android.apk"
+  #       elif [ "${{ matrix.platform }}" = "ios" ]; then
+  #         npx cap add ios
+  #         npx cap sync ios
+  #         # Note: iOS builds require code signing, this is just a structure setup
+  #         echo "📱 iOS project structure created. Manual Xcode build required for distribution."
+  #         mkdir -p dist/mobile
+  #         echo "iOS project ready for Xcode build" > "dist/mobile/${{ matrix.app }}-ios-project.txt"
+  #       fi
+  #       
+  #       # Restore original files
+  #       if [ -f "temp.package.json.backup" ]; then
+  #         mv temp.package.json.backup package.json
+  #       else
+  #         rm -f package.json
+  #       fi
+  #       if [ -f "temp.env.backup" ]; then
+  #         mv temp.env.backup .env
+  #       else
+  #         rm -f .env
+  #       fi
+  #     env:
+  #       CSC_IDENTITY_AUTO_DISCOVERY: false
+  #       SKIP_CODE_SIGNING: true
+  #       
+  #   - name: Upload mobile artifact (BETA)
+  #     uses: actions/upload-artifact@v4
+  #     if: success()
+  #     with:
+  #       name: ${{ matrix.app }}-${{ matrix.platform }}-beta
+  #       path: dist/mobile/${{ matrix.app }}-${{ matrix.platform }}*
+  #       retention-days: 30
