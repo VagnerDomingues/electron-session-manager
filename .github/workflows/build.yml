@@ -123,14 +123,39 @@ jobs:
               echo "Build completed but no Mac artifacts were generated" > build-info.txt
               tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
             fi
-          fi
-        elif [ "${{ matrix.platform }}" = "linux" ]; then
-          # Linux: Include AppImage, deb files, and README
+          fi        elif [ "${{ matrix.platform }}" = "linux" ]; then
+          # Linux: Include AppImage, deb files, and README (filter for x64 architecture)
           echo "🐧 Linux: Creating archive with installer files..."
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null || \
-          echo "No Linux packages found, creating info file..." && echo "Linux build completed but no packages found" > build-info.txt && tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+          
+          # Find x64-specific files (exclude ARM64 variants)
+          X64_APPIMAGES=$(ls *.AppImage 2>/dev/null | grep -v "arm64" | grep -v "aarch64" || true)
+          AMD64_DEBS=$(ls *amd64*.deb 2>/dev/null || true)
+          
+          if [ -n "$X64_APPIMAGES" ] && [ -n "$AMD64_DEBS" ]; then
+            echo "✅ Found x64 AppImage and amd64 deb files, archiving..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES $AMD64_DEBS *.yml 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES $AMD64_DEBS 2>/dev/null
+          elif [ -n "$X64_APPIMAGES" ]; then
+            echo "✅ Found x64 AppImage files, archiving..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $X64_APPIMAGES 2>/dev/null
+          elif [ -n "$AMD64_DEBS" ]; then
+            echo "✅ Found amd64 deb packages, archiving..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $AMD64_DEBS *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" $AMD64_DEBS 2>/dev/null
+          elif ls *.AppImage 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found AppImage files (all architectures), archiving..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage 2>/dev/null
+          elif ls *.deb 2>/dev/null | head -1 > /dev/null; then
+            echo "✅ Found deb packages (all architectures), archiving..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb *.yml *.md 2>/dev/null || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.deb 2>/dev/null
+          else
+            echo "⚠️ No Linux packages found, creating info file..."
+            echo "Linux build completed but no packages found" > build-info.txt
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+          fi
         fi
         
         # Verify archive was created and show contents
