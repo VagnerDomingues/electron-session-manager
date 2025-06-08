@@ -61,6 +61,40 @@ function getExecutablePath(appName, platform) {
     return null;
 }
 
+// Helper function to create README file for each app
+function createAppReadme(appName, appDisplayName, outputDir) {
+    const readmeContent = `# ${appDisplayName} Desktop App
+
+This is a desktop version of ${appDisplayName} built with Electron Session Manager.
+
+## Installation
+
+### Windows
+- Extract the files to a folder
+- Run the .exe file
+
+### macOS  
+- Extract the .app bundle
+- Move to Applications folder (optional)
+- Run the app
+
+### Linux
+- Extract the archive to a folder
+- Make the executable file executable: chmod +x [app-name]
+- Run the executable file
+
+## About
+
+Built with [Electron Session Manager](https://github.com/VagnerDomingues/electron-session-manager)
+
+This application is not affiliated with the original ${appDisplayName} service.
+All trademarks belong to their respective owners.`;
+
+    const readmePath = path.join(outputDir, 'README.md');
+    fs.writeFileSync(readmePath, readmeContent);
+    console.log(`📝 Created README.md for ${appDisplayName}`);
+}
+
 // Main async function
 (async function main() {
     try {
@@ -196,6 +230,21 @@ function getExecutablePath(appName, platform) {
                         console.warn(`⚠️ Failed to fix metadata for ${appName}:`, metadataError.message);
                         // Don't fail the entire build for metadata issues
                     }
+                }
+                
+                // Create README file for the built app
+                createAppReadme(appName, appName.charAt(0).toUpperCase() + appName.slice(1), `dist/${appName}`);
+                  // Create README file for the built app
+                try {
+                    const envConfig = parseEnvConfig(path.join('configs', configFile));
+                    const appDisplayName = envConfig.APP_NAME || appName.charAt(0).toUpperCase() + appName.slice(1);
+                    const outputDir = `dist/${appName}`;
+                    
+                    if (fs.existsSync(outputDir)) {
+                        createAppReadme(appName, appDisplayName, outputDir);
+                    }
+                } catch (readmeError) {
+                    console.warn(`⚠️ Failed to create README for ${appName}:`, readmeError.message);
                 }
                 
                 const duration = Math.round((Date.now() - startTime) / 1000);

@@ -52,39 +52,12 @@ jobs:
       run: |
         # Create a release-ready structure
         mkdir -p release/${{ matrix.platform }}
-          # Copy all built examples to release directory
+        
+        # Copy all built examples to release directory
         for app in asana chatgpt discord notion whatsappweb; do
           if [ -d "dist/$app" ]; then
             echo "Packaging $app..."
             cp -r "dist/$app" "release/${{ matrix.platform }}/"
-            
-            # Create a README for each app
-            cat > "release/${{ matrix.platform }}/$app/README.md" << EOF
-        # $app Desktop App
-        
-        This is a desktop version of $app built with Electron PWA Boilerplate.
-        
-        ## Installation
-        
-        ### Windows
-        - Extract the files to a folder
-        - Run the .exe file
-          ### macOS  
-        - Extract the .app bundle
-        - Move to Applications folder (optional)
-        - Run the app
-        
-        ### Linux
-        - Extract the archive to a folder
-        - Make the executable file executable: chmod +x [app-name]
-        - Run the executable file
-        
-        ## About
-        
-        Built with [Electron Session Manager](https://github.com/VagnerDomingues/electron-session-manager)
-        
-        This application is not affiliated with the original $app service.
-        All trademarks belong to their respective owners.        EOF
           fi
         done
         
