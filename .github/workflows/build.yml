@@ -11,7 +11,7 @@ on:
 jobs:
   build-examples:
     runs-on: ${{ matrix.os }}
-      strategy:
+    strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         include:
@@ -84,11 +84,11 @@ jobs:
         Built with [Electron Session Manager](https://github.com/VagnerDomingues/electron-session-manager)
         
         This application is not affiliated with the original $app service.
-        All trademarks belong to their respective owners.
-        EOF
+        All trademarks belong to their respective owners.        EOF
           fi
         done
-          - name: Create platform archive
+        
+    - name: Create platform archive
       shell: bash
       run: |
         cd release
@@ -107,10 +107,10 @@ jobs:
         path: release/${{ matrix.platform }}/
         retention-days: 90
         
-    - name: Upload release archive
-      uses: actions/upload-artifact@v4
+    - name: Upload release archive      uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.artifact-name }}-archive        path: |
+        name: ${{ matrix.artifact-name }}-archive
+        path: |
           ${{ matrix.artifact-name }}.zip
           ${{ matrix.artifact-name }}.tar.gz
         if-no-files-found: ignore
@@ -129,15 +129,16 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
-        
-    - name: Create Release
+          - name: Create Release
       uses: softprops/action-gh-release@v1
-      with:        files: |
+      with:
+        files: |
           artifacts/windows-examples-archive/*.zip
           artifacts/macos-examples-archive/*.tar.gz
           artifacts/linux-examples-archive/*.tar.gz
         name: PWA Examples Release ${{ github.ref_name }}
-        body: |          # 🚀 Electron Session Manager - All Examples
+        body: |
+          # 🚀 Electron Session Manager - All Examples
           
           This release contains pre-built desktop applications for popular web services:
           
@@ -146,9 +147,9 @@ jobs:
           - **Asana** - Project management and team collaboration
           - **ChatGPT** - AI assistant interface  
           - **Discord** - Voice, video and text chat
-          - **Notion** - All-in-one workspace
-          - **WhatsApp Web** - Web version of WhatsApp
-            ## 💾 Downloads
+          - **Notion** - All-in-one workspace          - **WhatsApp Web** - Web version of WhatsApp
+          
+          ## 💾 Downloads
           
           - **Windows**: Download the `.zip` file
           - **macOS**: Download the `.tar.gz` file (macOS)
@@ -160,17 +161,17 @@ jobs:
           2. Extract the archive
           3. Navigate to the app folder you want to use
           4. Run the executable file
+            ## ⚠️ Security Note
           
-          ## ⚠️ Security Note
-            These applications are unsigned. You may need to:
+          These applications are unsigned. You may need to:
           - **Windows**: Allow the app in Windows Defender SmartScreen
           - **macOS**: Allow the app in System Preferences > Security & Privacy
           - **Linux**: Mark the executable as trusted or run from terminal
           
           ## 📝 Customization
+            To build your own PWA or customize these apps, visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
           
-          To build your own PWA or customize these apps, visit the [repository](https://github.com/${{ github.repository }}) and follow the README instructions.
-            ---
+          ---
           
           Built with ❤️ using Electron Session Manager
         draft: false
