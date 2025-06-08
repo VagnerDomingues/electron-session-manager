@@ -14,8 +14,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # do not erase this comment - it is used to generate the matrix
+        # os: [windows-latest, macos-latest, ubuntu-latest]
+        # app: [asana, chatgpt, discord, notion, whatsappweb]
         os: [windows-latest, macos-latest, ubuntu-latest]
-        app: [asana, chatgpt, discord, notion, whatsappweb]
+        app: [whatsappweb]
         include:
           - os: windows-latest
             platform: win
@@ -94,22 +97,23 @@ jobs:
         echo "📁 Files in dist/${{ matrix.app }}:"
         ls -la
           if [ "${{ matrix.platform }}" = "win" ]; then
-          # Windows: Include NSIS installer, portable exe, and README (exclude win-unpacked folder)
+          # Windows: Include NSIS installer, portable exe, and README (exclude win-unpacked folder and .yml files)
           echo "🪟 Windows: Creating archive with installer files..."
-          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked
+          7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked -x!*.yml
         elif [ "${{ matrix.platform }}" = "mac" ]; then
-          # macOS: Include DMG files and README (avoid problematic --exclude flags)
+          # macOS: Include DMG files and README (exclude .yml metadata files)
           echo "🍎 macOS: Looking for .dmg files..."
           if ls *.dmg 1> /dev/null 2>&1; then
             echo "✅ Found .dmg files, creating archive..."
-            # Create archive with only DMG files to avoid tar exclude errors
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.yml 2>/dev/null || \
+            # Create archive with only DMG files and README (exclude .yml files)
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.md 2>/dev/null || \
             tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg 2>/dev/null || \
             echo "⚠️ Basic DMG archive created"
           else
             echo "⚠️ No .dmg files found, checking for other Mac files..."
             if ls *.app 1> /dev/null 2>&1; then
               echo "📦 Found .app bundles, creating archive..."
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.app *.md 2>/dev/null || \
               tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.app 2>/dev/null || \
               echo "No suitable Mac files found for archiving"
             elif ls -d mac* 2>/dev/null; then
@@ -123,7 +127,8 @@ jobs:
               echo "Build completed but no Mac artifacts were generated" > build-info.txt
               tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
             fi
-          fi        elif [ "${{ matrix.platform }}" = "linux" ]; then
+          fi
+          elif [ "${{ matrix.platform }}" = "linux" ]; then
           # Linux: Include AppImage, deb files, and README (filter for x64 architecture)
           echo "🐧 Linux: Creating archive with installer files..."          # Find x64-specific files (exclude ARM64 variants)
           # Use arrays to properly handle filenames with spaces
