@@ -57,9 +57,9 @@ if (process.env.MAC_NOTARIZE_TEAM_ID) {
 const args = process.argv.slice(2);
 const platform = args[0] || 'win';
 const arch = args[1] || 'x64';
-let target = args[2] || process.env[`${platform.toUpperCase()}_TARGET`] || 'dir';
+let target = args[2] || process.env[`${platform.toUpperCase()}_TARGET`];
 
-console.log(`Building for ${platform}-${arch} with target ${target}...`);
+console.log(`Building for ${platform}-${arch}...`);
 
 // Read the package.json (which should already be configured for the specific app)
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
@@ -73,7 +73,18 @@ console.log(`📦 Building ${packageJson.build.productName || packageJson.name}.
 console.log(`📁 Output directory: ${packageJson.build.directories?.output || 'dist'}`);
 
 try {
-  execSync(`npx electron-builder --${platform} --${arch} --config.target=${target}`, {
+  // Build command - if no target specified, use package.json targets for installers
+  let buildCmd = `npx electron-builder --${platform} --${arch}`;
+  
+  // Only add target config if explicitly specified, otherwise use package.json targets
+  if (target) {
+    buildCmd += ` --config.target=${target}`;
+    console.log(`🎯 Using explicit target: ${target}`);
+  } else {
+    console.log(`🎯 Using package.json targets for installer packages`);
+  }
+  
+  execSync(buildCmd, {
     stdio: 'inherit',
     env: process.env
   });
