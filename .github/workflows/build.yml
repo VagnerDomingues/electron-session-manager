@@ -160,8 +160,7 @@ jobs:
             tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
           fi
         fi
-        
-        # Verify archive was created and show contents
+          # Verify archive was created and show contents
         if [ "${{ matrix.platform }}" = "win" ]; then
           echo "📋 Archive contents:"
           7z l "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip"
@@ -176,18 +175,13 @@ jobs:
         name: ${{ matrix.app }}-${{ matrix.platform }}-x64
         path: archives/${{ matrix.app }}-${{ matrix.platform }}-x64.*
         retention-days: 90
-  # ARM64 builds for Apple Silicon and other ARM64 platforms
-  build-arm64-apps:
-    runs-on: ${{ matrix.os }}
+
+  # Apple Silicon builds (macOS ARM64)
+  build-apple-silicon-apps:
+    runs-on: macos-latest
     strategy:
       matrix:        
-        # os: [windows-latest, macos-latest, ubuntu-latest]
-        # app: [asana, chatgpt, discord, notion, whatsappweb]
-        os: [macos-latest]  # Start with macOS only (Apple Silicon)
         app: [whatsappweb]  # Start with one app, will expand later: [asana, chatgpt, discord, notion, whatsappweb]
-        include:
-          - os: macos-latest  
-            platform: mac
         
     steps:
     - name: Checkout code
@@ -202,10 +196,10 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build ${{ matrix.app }} for ${{ matrix.platform }}-arm64
+    - name: Build ${{ matrix.app }} for Apple Silicon
       shell: bash
       run: |
-        echo "🚀 Building ${{ matrix.app }} for ${{ matrix.platform }}-arm64 (Apple Silicon)..."
+        echo "🍎 Building ${{ matrix.app }} for Apple Silicon (ARM64)..."
         
         # Backup current files if they exist
         if [ -f "package.json" ]; then
@@ -220,7 +214,7 @@ jobs:
         cp "configs/${{ matrix.app }}.env" .env
         
         # Build the app for arm64 architecture (Apple Silicon)
-        node scripts/build.js ${{ matrix.platform }} arm64
+        node scripts/build.js mac arm64
         
         # Restore original files
         if [ -f "temp.package.json.backup" ]; then
@@ -238,7 +232,7 @@ jobs:
         SKIP_CODE_SIGNING: true
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Create app-specific archive
+    - name: Prepare Apple Silicon DMG
       shell: bash
       run: |
         # Create archive directory
@@ -250,57 +244,45 @@ jobs:
           APP_NAME="${{ matrix.app }}"
         fi
         
-        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-arm64)..."
-        echo "🎯 Including only installer/executable files (no unpacked directories)"
+        echo "🍎 Preparing Apple Silicon DMG for $APP_NAME..."
         
-        # Create archive based on platform with only installer/executable files
+        # Navigate to build directory
         cd "dist/${{ matrix.app }}"
         
         # Debug: List all files in the directory
         echo "📁 Files in dist/${{ matrix.app }}:"
         ls -la
         
-        # macOS ARM64: Include DMG files and README (exclude .yml metadata files)
-        echo "🍎 macOS ARM64: Looking for .dmg files..."
-        if ls *.dmg 1> /dev/null 2>&1; then
-          echo "✅ Found .dmg files, creating archive..."
-          # Create archive with only DMG files and README (exclude .yml files)
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.dmg *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.dmg 2>/dev/null || \
-          echo "⚠️ Basic DMG archive created"
+        # Find the ARM64 DMG file and copy it directly
+        if ls *arm64*.dmg 1> /dev/null 2>&1; then
+          ARM64_DMG=$(ls *arm64*.dmg | head -1)
+          echo "✅ Found Apple Silicon DMG: $ARM64_DMG"
+          # Copy the DMG directly to archives with clean naming
+          cp "$ARM64_DMG" "../../archives/${{ matrix.app }}-apple-silicon.dmg"
+          echo "📦 Created: ${{ matrix.app }}-apple-silicon.dmg"
+        elif ls *.dmg 1> /dev/null 2>&1; then
+          # Fallback: if no arm64-specific DMG, assume the DMG is ARM64 (since we built for ARM64)
+          MAIN_DMG=$(ls *.dmg | head -1)
+          echo "✅ Found DMG (assuming ARM64): $MAIN_DMG"
+          cp "$MAIN_DMG" "../../archives/${{ matrix.app }}-apple-silicon.dmg"
+          echo "📦 Created: ${{ matrix.app }}-apple-silicon.dmg"
         else
-          echo "⚠️ No .dmg files found, checking for other Mac files..."
-          if ls *.app 1> /dev/null 2>&1; then
-            echo "📦 Found .app bundles, creating archive..."
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.app *.md 2>/dev/null || \
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" *.app 2>/dev/null || \
-            echo "No suitable Mac files found for archiving"
-          elif ls -d mac* 2>/dev/null; then
-            echo "📦 Found Mac directories, using find for selective archiving..."
-            # Use find to select only installer files from directories
-            find . -name "*.dmg" -o -name "*.pkg" | tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" -T - 2>/dev/null || \
-            echo "No Mac installer files found" > build-info.txt && tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" build-info.txt
-          else
-            echo "❌ No Mac build artifacts found!"
-            # Create an empty archive to avoid complete failure
-            echo "ARM64 build completed but no Mac artifacts were generated" > build-info.txt
-            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz" build-info.txt
-          fi
+          echo "❌ No DMG files found for Apple Silicon build!"
+          echo "Available files:"
+          ls -la          # Create a placeholder file
+          echo "Apple Silicon build failed - no DMG generated" > "../../archives/${{ matrix.app }}-apple-silicon-failed.txt"
         fi
         
-        # Verify archive was created and show contents
-        echo "📋 Archive contents:"
-        tar -tzf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.tar.gz"
-        
-    - name: Upload ${{ matrix.app }}-${{ matrix.platform }}-arm64 artifact
+    - name: Upload Apple Silicon artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.app }}-${{ matrix.platform }}-arm64
-        path: archives/${{ matrix.app }}-${{ matrix.platform }}-arm64.*
+        name: ${{ matrix.app }}-apple-silicon
+        path: archives/${{ matrix.app }}-apple-silicon.*
         retention-days: 90
+
   create-release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-x64-apps, build-arm64-apps]  # Include both x64 and ARM64 builds
+    needs: [build-x64-apps, build-apple-silicon-apps]  # Include both x64 and Apple Silicon builds
     runs-on: ubuntu-latest
     
     steps:
