@@ -34,7 +34,10 @@
     "desktop",
     "cross-platform",
     "pwa-client"  ],
-  "author": "Vagner Domingues",
+  "author": {
+    "name": "Vagner Domingues Madeira",
+    "email": "vagner_domingues@hotmail.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.3.3",

@@ -67,7 +67,8 @@ jobs:
           mv temp.env.backup .env
         else
           rm -f .env
-        fi      env:
+        fi
+      env:
         CSC_IDENTITY_AUTO_DISCOVERY: false
         SKIP_CODE_SIGNING: true
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
