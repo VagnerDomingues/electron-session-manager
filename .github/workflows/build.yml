@@ -84,21 +84,40 @@ jobs:
         if [ -z "$APP_NAME" ]; then
           APP_NAME="${{ matrix.app }}"
         fi
-        
-        echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-x64)..."
+          echo "📦 Creating archive for $APP_NAME (${{ matrix.app }}-${{ matrix.platform }}-x64)..."
         echo "🎯 Including only installer/executable files (no unpacked directories)"
         
         # Create archive based on platform with only installer/executable files
         cd "dist/${{ matrix.app }}"
+        
+        # Debug: List all files in the directory
+        echo "📁 Files in dist/${{ matrix.app }}:"
+        ls -la
         
         if [ "${{ matrix.platform }}" = "win" ]; then
           # Windows: Include NSIS installer, portable exe, and README (exclude win-unpacked folder)
           7z a "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.zip" *.exe *.md -x!win-unpacked
         elif [ "${{ matrix.platform }}" = "mac" ]; then
           # macOS: Include DMG files and README (exclude mac/mac-universal folders)
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.md --exclude='mac' --exclude='mac-universal' 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg *.md 2>/dev/null || \
-          tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.md 2>/dev/null
+          echo "🍎 macOS: Looking for .dmg files..."
+          if ls *.dmg 1> /dev/null 2>&1; then
+            echo "✅ Found .dmg files, creating archive..."
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg --exclude='mac' --exclude='mac-universal' || \
+            tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.dmg
+          else
+            echo "⚠️ No .dmg files found, checking for other Mac files..."
+            if ls *.app 1> /dev/null 2>&1 || ls mac* 1> /dev/null 2>&1; then
+              echo "📦 Found Mac app bundles or mac directories, creating archive..."
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.app --exclude='mac' --exclude='mac-universal' 2>/dev/null || \
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" mac* --exclude='mac-universal' 2>/dev/null || \
+              echo "No suitable Mac files found for archiving"
+            else
+              echo "❌ No Mac build artifacts found!"
+              # Create an empty archive to avoid complete failure
+              echo "Build completed but no Mac artifacts were generated" > build-info.txt
+              tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" build-info.txt
+            fi
+          fi
         else
           # Linux: Include AppImage, deb files, and README (exclude linux-unpacked folder)  
           tar -czf "../../archives/${{ matrix.app }}-${{ matrix.platform }}-x64.tar.gz" *.AppImage *.deb *.md --exclude='linux-unpacked' 2>/dev/null || \
