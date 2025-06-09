@@ -15,10 +15,8 @@ jobs:
     strategy:
       matrix:
         # do not erase this comment - it is used to generate the matrix
-        # os: [windows-latest, macos-latest, ubuntu-latest]
-        # app: [asana, chatgpt, discord, notion, whatsappweb]
         os: [windows-latest, macos-latest, ubuntu-latest]
-        app: [whatsappweb]
+        app: [asana, chatgpt, discord, notion, whatsappweb]
         include:
           - os: windows-latest
             platform: win
@@ -212,8 +210,9 @@ jobs:
   build-apple-silicon-apps:
     runs-on: macos-latest
     strategy:
-      matrix:        
-        app: [whatsappweb]  # Start with one app, will expand later: [asana, chatgpt, discord, notion, whatsappweb]
+      matrix:
+        # app: [asana, chatgpt, discord, notion, whatsappweb]      
+        app: [whatsappweb]  # Start with one app, will expand later
         
     steps:
     - name: Checkout code
